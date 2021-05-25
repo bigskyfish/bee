@@ -1,0 +1,25 @@
+{
+    "servers": [{
+            "ip": "47.98.53.84",
+            "username": "root",
+            "password": "9ol.0p;/",
+            "port": 22,
+            "remote_path": "/home/floatcloud/miner",
+            "local_path": "/Users/floatcloud/Miner",
+            "excludes": [
+                "img"
+            ]
+        },
+        {
+            "ip": "8.209.255.111",
+            "username": "root",
+            "password": "Mnb1234567.",
+            "port": 22,
+            "remote_path": "/home/miner",
+            "local_path": "/Users/floatcloud/Miner/scp",
+            "excludes": [
+                "img"
+            ]
+        }
+    ]
+}
