@@ -15,39 +15,35 @@ import java.nio.charset.Charset;
 @Data
 public class SshClientUtil {
 
-    private ServerConfigPojo serverConfigPojo;
 
     private String charset = Charset.defaultCharset().toString();
     private static final int TIME_OUT = 1000 * 5 * 60;
 
-    private Connection conn;
+    private static Connection conn;
 
-    public SshClientUtil(ServerConfigPojo serverConfigPojo) {
-        this.serverConfigPojo = serverConfigPojo;
-    }
 
     /**
      * 登录指远程服务器
      * @return
      * @throws IOException
      */
-    private boolean login() throws IOException {
-        conn = new Connection(this.serverConfigPojo.getIp());
+    private static boolean login(ServerConfigPojo serverConfigPojo) throws IOException {
+        conn = new Connection(serverConfigPojo.getIp());
         conn.connect();
-        return conn.authenticateWithPassword(this.serverConfigPojo.getUser(), this.serverConfigPojo.getPassword());
+        return conn.authenticateWithPassword(serverConfigPojo.getUser(), serverConfigPojo.getPassword());
     }
 
-    public int exec(String shell) throws Exception {
+    public static int exec(ServerConfigPojo serverConfigPojo,String shell) throws Exception {
         int ret = -1;
         try {
-            if (login()) {
+            if (login(serverConfigPojo)) {
                 Session session = conn.openSession();
-                session.execCommand(shell);
+                session.execCommand(shell , "UTF-8" );
                 session.waitForCondition(ChannelCondition.EXIT_STATUS, TIME_OUT);
                 ret = session.getExitStatus();
             } else {
                 // 自定义异常类 实现略
-                throw new RuntimeException("登录远程机器失败" + this.serverConfigPojo.getIp());
+                throw new RuntimeException("登录远程机器失败" + serverConfigPojo.getIp());
             }
         } finally {
             if (conn != null) {
@@ -55,14 +51,5 @@ public class SshClientUtil {
             }
         }
         return ret;
-    }
-
-    public static void main(){
-        try {
-            SshClientUtil sshClient = new SshClientUtil(new ServerConfigPojo("", "username", "password"));
-            sshClient.exec("服务器shell脚本路径");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 }
