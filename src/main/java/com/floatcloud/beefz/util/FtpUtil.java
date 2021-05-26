@@ -16,14 +16,9 @@ import sun.net.ftp.FtpProtocolException;
 
 public class FtpUtil {
 
-    FtpClient ftpClient;
 
     /***
      * 连接ftp
-     * @param url  必须是  192.168.8.1  否则提示异常
-     * @param port
-     * @param username
-     * @param password
      * @return
      */
     public static FtpClient connectFTP(ServerConfigPojo serverConfigPojo) {

@@ -14,4 +14,6 @@ public class FileConstant {
     public static final String BEE_CONFIG = "bee-config.yaml";
 
     public static final String TRANSFER_PRIVATE_KEY_NAME = "transferPrivateKey.sh";
+
+    public static final String UN_INSTALL = "uninstallBee.sh";
 }
