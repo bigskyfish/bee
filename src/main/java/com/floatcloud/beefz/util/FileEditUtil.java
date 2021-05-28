@@ -1,6 +1,8 @@
 package com.floatcloud.beefz.util;
 
+import com.floatcloud.beefz.constant.FileConstant;
 import com.floatcloud.beefz.pojo.ServerConfigPojo;
+import com.sun.deploy.net.MessageHeader;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -22,28 +24,39 @@ import java.util.List;
  */
 public class FileEditUtil {
 
-    /**
-     * 文件尾部追加
-     * @param file 文件路径
-     * @param content 追加内容
-     */
-    public static void appendStr(String file, String content) {
-        BufferedWriter out = null;
+
+    private static List<ServerConfigPojo> serverConfigPojos = new ArrayList<>(500);
+    
+    static {
+        String filePath = System.getProperty("user.dir") + File.pathSeparator +"src" + File.pathSeparator + FileConstant.CSV_PATH;
         try {
-            out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file, true)));
-            out.write(content);
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-               if(out != null) {
-                   out.close();
-               }
-            } catch (IOException e) {
-                e.printStackTrace();
+            FileInputStream inputStream = new FileInputStream(filePath);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+            String line;
+            boolean first = true;
+            while ((line = bufferedReader.readLine()) != null) {
+                if (first) {
+                    first = false;
+                } else {
+                    String[] serverInfos = line.split(",");
+                    ServerConfigPojo configPojo = new ServerConfigPojo();
+                    configPojo.setIp(serverInfos[0]);
+                    configPojo.setUser(serverInfos[1]);
+                    configPojo.setPassword(serverInfos[2]);
+                    configPojo.setPort(Integer.valueOf(serverInfos[3]));
+                    serverConfigPojos.add(configPojo);
+                }
             }
+        } catch (IOException e){
+            e.printStackTrace();
         }
     }
+    
+    public static List<ServerConfigPojo> getServers(){
+        return serverConfigPojos;
+    }
+    
+    
 
 
 

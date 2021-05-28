@@ -1,7 +1,6 @@
 package com.floatcloud.beefz.controller;
 
-import com.floatcloud.beefz.constant.FileConstant;
-import com.floatcloud.beefz.pojo.ServerConfigPojo;
+import com.floatcloud.beefz.pojo.ServerCoreResponsePojo;
 import com.floatcloud.beefz.service.SendFileService;
 import com.floatcloud.beefz.util.FileEditUtil;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,11 +8,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
+
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author floatcloud
@@ -26,11 +24,14 @@ public class SendFileController {
     private SendFileService sendFileService;
 
     @GetMapping("/sendFile")
-    public String sendFile(@RequestParam(name="remove", defaultValue = "0") int remove) throws IOException {
-        String srcPath = System.getProperty("user.dir") + "/src/";
-        List<ServerConfigPojo> serverList = FileEditUtil.getServerList(new File(srcPath + FileConstant.CSV_PATH));
-        sendFileService.sendFileToRemote(serverList, remove);
+    public String sendFile(@RequestParam(name="remove", defaultValue = "0") int remove) {
+        sendFileService.sendFileToRemote(FileEditUtil.getServers(), remove);
         return "";
+    }
+
+    @GetMapping("/private/keys")
+    public List<ServerCoreResponsePojo> getPrivateKeys(){
+        return sendFileService.getPrivateKey(FileEditUtil.getServers());
     }
 
 }
