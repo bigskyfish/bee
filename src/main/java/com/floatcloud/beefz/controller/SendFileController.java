@@ -6,6 +6,7 @@ import com.floatcloud.beefz.service.SendFileService;
 import com.floatcloud.beefz.util.FileEditUtil;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.File;
@@ -25,10 +26,10 @@ public class SendFileController {
     private SendFileService sendFileService;
 
     @GetMapping("/sendFile")
-    public String sendFile() throws IOException {
+    public String sendFile(@RequestParam(name="remove", defaultValue = "0") int remove) throws IOException {
         String srcPath = System.getProperty("user.dir") + "/src/";
         List<ServerConfigPojo> serverList = FileEditUtil.getServerList(new File(srcPath + FileConstant.CSV_PATH));
-        sendFileService.sendFileToRemote(serverList);
+        sendFileService.sendFileToRemote(serverList, remove);
         return "";
     }
 

@@ -1,0 +1,12 @@
+server:
+  port: 8080
+
+
+# \u914D\u7F6E\u4E0A\u4F20\u7684\u6587\u4EF6
+beedata:
+  sendfile:
+    - bee-config.yaml
+    - setup.sh
+    - setupServer.sh
+    - transferPrivateKey.sh
+    - uninstall.sh

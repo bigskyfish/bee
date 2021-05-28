@@ -15,5 +15,6 @@ public class FileConstant {
 
     public static final String TRANSFER_PRIVATE_KEY_NAME = "transferPrivateKey.sh";
 
-    public static final String UN_INSTALL = "uninstallBee.sh";
+    public static final String UN_INSTALL = "uninstall.sh";
+
 }

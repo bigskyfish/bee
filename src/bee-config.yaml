@@ -43,3 +43,4 @@ tracing-service-name: bee
 transaction: ""
 verbosity: trace
 welcome-message: ""
+password: _bee_config_password_

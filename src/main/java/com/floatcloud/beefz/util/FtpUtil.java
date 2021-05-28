@@ -26,7 +26,7 @@ public class FtpUtil {
         FtpClient ftp = null;
         try {
             //创建地址
-            SocketAddress addr = new InetSocketAddress(serverConfigPojo.getIp(), 22);
+            SocketAddress addr = new InetSocketAddress(serverConfigPojo.getIp(), serverConfigPojo.getPort());
             //连接
             ftp = FtpClient.create();
             ftp.connect(addr);
@@ -63,19 +63,6 @@ public class FtpUtil {
             e.printStackTrace();
         }
         return list;
-    }
-
-    public static void main(String[] args) {
-        FtpClient ftp = connectFTP(new ServerConfigPojo("47.98.53.84","root","9ol.0p;/"));
-        List<String> list = download("1.txt",ftp);
-        for(int i=0;i<list.size();i++){
-            System.out.println("list "+ i + " :"+list.get(i));
-        }
-        try {
-            ftp.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
 }

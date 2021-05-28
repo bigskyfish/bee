@@ -15,5 +15,6 @@ public class ServerConfigPojo {
     private String ip;
     private String user;
     private String password;
+    private Integer port;
 
 }
