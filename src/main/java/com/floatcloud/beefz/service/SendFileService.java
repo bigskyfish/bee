@@ -113,9 +113,9 @@ public class SendFileService {
         }
         try {
             ChannelSftp finalChannelSftp = channelSftp;
-            ChannelShell channel = (ChannelShell) sftpHelper.getSession().openChannel("shell");
-            channel.connect();
-            OutputStream outputStream = channel.getOutputStream();
+//            ChannelShell channel = (ChannelShell) sftpHelper.getSession().openChannel("shell");
+//            channel.connect();
+//            OutputStream outputStream = channel.getOutputStream();
             filenames.forEach(filename ->{
                 String filePath = srcPath + filename;
                 try {
@@ -123,26 +123,26 @@ public class SendFileService {
                     finalChannelSftp.cd(REMOTE_FOLDER);
                     finalChannelSftp.put(fileInputStream, REMOTE_FOLDER + filename);
                     // 设置文件的fileformat 为 unix
-                    String cmd = "vi +':w ++ff=unix' +':q' " + REMOTE_FOLDER + filename;
-                    outputStream.write(cmd.getBytes());
-                    outputStream.flush();
+//                    String cmd = "vi +':w ++ff=unix' +':q' " + REMOTE_FOLDER + filename;
+//                    outputStream.write(cmd.getBytes());
+//                    outputStream.flush();
                 } catch (SftpException | IOException sftpException) {
                     sftpException.printStackTrace();
                 } finally {
-                    try {
-                        if(outputStream != null) {
-                            outputStream.close();
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
+//                    try {
+//                        if(outputStream != null) {
+//                            outputStream.close();
+//                        }
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
                 }
 
             });
             ChannelExec exec = sftpHelper.getChannelExec();
             exec.setCommand(sh);
             exec.connect();
-        } catch (JSchException | IOException e){
+        } catch (JSchException e){
             e.printStackTrace();
         }
         return result;

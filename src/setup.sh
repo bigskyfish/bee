@@ -3,7 +3,6 @@ do
   case $opt in
     d)
       unbee=$OPTARG
-      if
       chmod 777 /mnt/bee/uninstall.sh
       sh /mnt/bee/uninstall.sh
       ;;
