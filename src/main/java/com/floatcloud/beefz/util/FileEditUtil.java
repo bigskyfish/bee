@@ -28,7 +28,7 @@ public class FileEditUtil {
     private static List<ServerConfigPojo> serverConfigPojos = new ArrayList<>(500);
     
     static {
-        String filePath = System.getProperty("user.dir") + File.pathSeparator +"src" + File.pathSeparator + FileConstant.CSV_PATH;
+        String filePath = System.getProperty("user.dir") + File.separator +"src" + File.separator + FileConstant.CSV_PATH;
         try {
             FileInputStream inputStream = new FileInputStream(filePath);
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
