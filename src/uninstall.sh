@@ -14,3 +14,7 @@ rm -rf /var/lib/bee-clef/
 rm -rf /etc/bee-clef/
 # 卸载地址信息
 rm -rf /root/.bee/
+# 清空日志文件
+rm -rf /mnt/bee/beeSetup.log
+# 清除监听端口16366的任务
+kill -9 $(netstat -nlp | grep :16366 | awk '{print $7}' | awk -F"/" '{ print $1 }')

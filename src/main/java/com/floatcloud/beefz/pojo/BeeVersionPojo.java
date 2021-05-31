@@ -6,16 +6,17 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 /**
- * @author aiyuner
+ * @author floatcloud
  */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @ToString
-public class ServerCoreResponsePojo {
+public class BeeVersionPojo {
 
-    private String address;
-    private String ip;
-    private String privateKey;
+    private String beeClefVersion;
+    private String beeClefRpm;
+    private String beeVersion;
+    private String beeRpm;
 
 }

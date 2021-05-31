@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<form action="/v1/api/sendFile" method="get">
+    bee 版本信息：<br>
+    <input type="text" name="beeversion">
+    <br>
+    <p> 参考为：https://github.com/ethersphere/bee/releases/download/v0.5.3/bee_0.5.3_386.rpm </p>
+    <br>
+    rpm 文件名：<br>
+    <input type="text" name="beerpm">
+    <br>
+    <p> 参考为：bee_0.5.3_386.rpm </p>
+    <p> 是否铲除原矿机中bee程序 </p>
+    <label><input name="remove" type="radio" value="1" > 是 </label>
+    <label><input name="remove" type="radio" value="0"> 否 </label>
+    <input type="submit" name="提交">
+</form>
+
+</body>
+</html>

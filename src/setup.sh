@@ -1,18 +1,14 @@
-while getopts "d:p:" opt;
+while getopts "d:p:v:" opt;
 do
   case $opt in
     d)
       unbee=$OPTARG
       chmod 777 /mnt/bee/uninstall.sh
-      sh /mnt/bee/uninstall.sh
-      ;;
+      sh /mnt/bee/uninstall.sh ;;
     p)
       passwd=$OPTARG
-      chmod 777 /mnt/bee/setupServer.sh
-      nohup sh /mnt/bee/setupServer.sh -p $passwd  >>/mnt/bee/beeSetup.log &
-      ;;
+      nohup sh /mnt/bee/setupServer.sh $1 $2 $3 $4 -p $passwd  >>/mnt/bee/beeSetup.log 2>&1 & ;;
     \?)
-      echo "invalid arg"
-      ;;
+      echo "invalid arg" ;;
   esac
 done

@@ -1,18 +1,26 @@
 package com.floatcloud.beefz.service;
 
+import com.floatcloud.beefz.pojo.BeeVersionPojo;
 import com.floatcloud.beefz.pojo.ServerConfigPojo;
 import com.floatcloud.beefz.pojo.ServerCoreResponsePojo;
 import com.floatcloud.beefz.util.FileDistributeUtil;
 import com.floatcloud.beefz.util.SFTPHelper;
-import com.jcraft.jsch.*;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.SftpATTRS;
+import com.jcraft.jsch.SftpException;
 import io.micrometer.core.instrument.util.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.tomcat.util.buf.CharsetUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.io.*;
-import java.nio.charset.Charset;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -43,15 +51,24 @@ public class SendFileService {
     @Value("${beedata}")
     private String fileNameStr;
 
+    @Value("${bee.clef.version}")
+    private String beeClefVersion;
+
+    @Value("${bee.version}")
+    private String beeVersion;
+
+    @Value("${bee.clef.rpm}")
+    private String beeClefRpm;
+
+    @Value("${bee.rpm}")
+    private String beeRpm;
+
+
 
     /**
      * 不执行删除bee
      */
-    public static final String SHELL_BEE_SET_UP = "chmod 777 /mnt/bee/setup.sh && sh /mnt/bee/setup.sh -p ";
-    /**
-     * 执行删除bee
-     */
-    public static final String SHELL_BEE_SET_UP_REMOVE = "chmod 777 /mnt/bee/setup.sh && sh /mnt/bee/setup.sh -d 1 -p ";
+    public static final String SHELL_BEE_SET_UP = "chmod 777 /mnt/bee/setup.sh && sh /mnt/bee/setup.sh ";
 
     /**
      * 执行删除bee
@@ -60,14 +77,17 @@ public class SendFileService {
 
     private final ReentrantLock lock = new ReentrantLock();
 
+
+
+
     /**
      * 发送文件到远程服务器
      * @param serverList 服务集合
      */
-    public void sendFileToRemote(List<ServerConfigPojo> serverList, Integer remove) {
+    public void sendFileToRemote(List<ServerConfigPojo> serverList, BeeVersionPojo beeVersionPojo, Integer remove) {
         String[] split = fileNameStr.split(",");
         List<String> filenames = Stream.of(split).collect(Collectors.toList());
-        final String shell = remove == 1 ? SHELL_BEE_SET_UP_REMOVE : SHELL_BEE_SET_UP;
+        final String shell = remove == 1 ? SHELL_BEE_SET_UP + "-d 1 -p " : SHELL_BEE_SET_UP + "-p ";
         if (serverList != null && !serverList.isEmpty()) {
             // 执行 派发动作
             serverList.forEach(serverConfigPojo -> {
@@ -75,7 +95,7 @@ public class SendFileService {
                     if(!poolExecutor.isShutdown()) {
                         poolExecutor.execute(() -> {
                             try {
-                                beeSetup(serverConfigPojo, filenames, shell);
+                                beeSetup(serverConfigPojo, filenames, beeVersionPojo, shell + serverConfigPojo.getPassword());
                             } catch (Exception e) {
                                 log.error("====SshClientUtil 执行脚本 error====", e);
                             }
@@ -88,9 +108,20 @@ public class SendFileService {
         }
     }
 
-    public boolean beeSetup(ServerConfigPojo serverConfigPojo, List<String> filenames, String sh){
+    public boolean beeSetup(ServerConfigPojo serverConfigPojo, List<String> filenames, BeeVersionPojo beeVersionPojo, String sh){
         boolean result = true;
         String srcPath = System.getProperty("user.dir") + File.separator +"src" + File.separator;
+        if(beeVersionPojo.getBeeClefVersion() != null && !beeVersionPojo.getBeeClefVersion().isEmpty()
+                && beeVersionPojo.getBeeClefRpm() != null && !beeVersionPojo.getBeeClefRpm().isEmpty()){
+            beeClefVersion = beeVersionPojo.getBeeClefVersion();
+            beeClefRpm = beeVersionPojo.getBeeClefRpm();
+        }
+        if(beeVersionPojo.getBeeVersion() != null && !beeVersionPojo.getBeeVersion().isEmpty()
+                && beeVersionPojo.getBeeRpm() != null && !beeVersionPojo.getBeeRpm().isEmpty()){
+            beeVersion = beeVersionPojo.getBeeVersion();
+            beeRpm = beeVersionPojo.getBeeRpm();
+        }
+        String shellVersion = beeClefVersion + " " + beeClefRpm + " " + beeVersion + " " + beeRpm;
         SFTPHelper sftpHelper= null;
         ChannelSftp channelSftp = null;
         try {
@@ -113,29 +144,19 @@ public class SendFileService {
         }
         try {
             ChannelSftp finalChannelSftp = channelSftp;
-//            ChannelShell channel = (ChannelShell) sftpHelper.getSession().openChannel("shell");
-//            channel.connect();
-//            OutputStream outputStream = channel.getOutputStream();
             filenames.forEach(filename ->{
                 String filePath = srcPath + filename;
                 try {
-                    FileInputStream fileInputStream = new FileInputStream(filePath);
                     finalChannelSftp.cd(REMOTE_FOLDER);
-                    finalChannelSftp.put(fileInputStream, REMOTE_FOLDER + filename);
-                    // 设置文件的fileformat 为 unix
-//                    String cmd = "vi +':w ++ff=unix' +':q' " + REMOTE_FOLDER + filename;
-//                    outputStream.write(cmd.getBytes());
-//                    outputStream.flush();
+                    if("version.txt".equals(filename)){
+                        InputStream in = new ByteArrayInputStream(shellVersion.getBytes(StandardCharsets.UTF_8));
+                        finalChannelSftp.put(in, REMOTE_FOLDER + filename);
+                    } else {
+                        FileInputStream fileInputStream = new FileInputStream(filePath);
+                        finalChannelSftp.put(fileInputStream, REMOTE_FOLDER + filename);
+                    }
                 } catch (SftpException | IOException sftpException) {
                     sftpException.printStackTrace();
-                } finally {
-//                    try {
-//                        if(outputStream != null) {
-//                            outputStream.close();
-//                        }
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
                 }
 
             });
@@ -163,7 +184,7 @@ public class SendFileService {
                         poolExecutor.execute(() -> {
                             FileDistributeUtil fileDistributeUtil = new FileDistributeUtil(serverConfigPojo);
                             ServerCoreResponsePojo serverCoreResponsePojo =
-                                    fileDistributeUtil.getServerCoreResponsePojo( GET_PRIVATE_KEY);
+                                    fileDistributeUtil.getServerCoreResponsePojo();
                             try {
                                 lock.lock();
                                 result.add(serverCoreResponsePojo);

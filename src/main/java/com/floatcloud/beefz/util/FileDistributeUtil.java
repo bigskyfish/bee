@@ -108,7 +108,7 @@ public class FileDistributeUtil {
      * 获取bee程序私钥
      * @return 私钥集合
      */
-    public ServerCoreResponsePojo getServerCoreResponsePojo(String shellMsg) {
+    public ServerCoreResponsePojo getServerCoreResponsePojo() {
         ServerCoreResponsePojo result = new ServerCoreResponsePojo();
         result.setIp(serverConfigPojo.getIp());
         connect();
@@ -116,24 +116,30 @@ public class FileDistributeUtil {
             return result;
         }
         try {
-            exec = (ChannelExec) session.openChannel("exec");
-            exec.setCommand(shellMsg);
-            InputStream inputStream = exec.getInputStream();
-            exec.connect(30);
+            sftp = (ChannelSftp) session.openChannel("sftp");
+            InputStream inputStream;
+            inputStream = sftp.get("/mnt/bee/privateKey.txt", new MyProgressMonitor());
+            sftp.connect();
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
             String line = null;
-            while((line = bufferedReader.readLine()) != null){
-                if(line.contains("swarm.key")){
+            while ((line = bufferedReader.readLine()) != null) {
+                if (line.contains("swarm.key")) {
                     int i = line.indexOf("{");
                     String jsonStr = line.substring(i);
-                    PrivateKeyPojo parse = JSON.parseObject(jsonStr, new TypeReference<PrivateKeyPojo>() {});
+                    PrivateKeyPojo parse = JSON.parseObject(jsonStr, new TypeReference<PrivateKeyPojo>() {
+                    });
+                    result.setIp(serverConfigPojo.getIp());
                     result.setAddress(parse.getAddress());
                     result.setPrivateKey(parse.getPrivatekey());
                     break;
                 }
             }
-        } catch (IOException | JSchException e){
+        } catch (IOException | JSchException | SftpException e){
             e.printStackTrace();
+        } finally {
+            if (sftp != null){
+                sftp.exit();
+            }
         }
         return result;
     }
@@ -192,12 +198,10 @@ public class FileDistributeUtil {
 
 
     public static void main(String[] args) throws JSchException, SftpException {
-        ServerConfigPojo serverConfigPojo = new ServerConfigPojo("47.98.53.84", "root","890-iop[",22);
+        ServerConfigPojo serverConfigPojo = new ServerConfigPojo("47.98.53.84", "root","9ol.0p;/",22);
         FileDistributeUtil fileDistributeUtil = new FileDistributeUtil(serverConfigPojo);
-        fileDistributeUtil.connect();
-        fileDistributeUtil.sftp = (ChannelSftp) fileDistributeUtil.session.openChannel("sftp");
-        fileDistributeUtil.sftp.cd("/mnt/");
-        fileDistributeUtil.sftp.mkdir("bee");
+        ServerCoreResponsePojo serverCoreResponsePojo = fileDistributeUtil.getServerCoreResponsePojo();
+        System.out.println(serverCoreResponsePojo.toString());
     }
 
 }

@@ -1,12 +1,23 @@
 package com.floatcloud.beefz.util;
 
 import com.floatcloud.beefz.pojo.ServerConfigPojo;
-import com.jcraft.jsch.*;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpATTRS;
+import com.jcraft.jsch.SftpException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.audio.AudioDevice;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.Closeable;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -280,7 +291,7 @@ public class SFTPHelper implements Closeable {
         String srcPath = System.getProperty("user.dir") + File.separator +"src" + File.separator;
         SFTPHelper sftpHelper= null;
         try {
-            sftpHelper = new SFTPHelper(new ServerConfigPojo("root", "890-iop[", "47.98.53.84", 22));
+            sftpHelper = new SFTPHelper(new ServerConfigPojo("47.98.53.84", "root","9ol.0p;/",22));
             if (sftpHelper.connection()) {
                 SftpATTRS lstat = sftpHelper.channelSftp.lstat("/mnt/bee/");
                 if (!lstat.isDir()){
@@ -297,14 +308,10 @@ public class SFTPHelper implements Closeable {
             }
         }
         try {
-            String filePath = srcPath + "setup.sh";
-            sftpHelper.channelSftp.cd("/mnt/bee/");
             ChannelExec shell = (ChannelExec) sftpHelper.session.openChannel("exec");
-            boolean result = sftpHelper.put(filePath, "/mnt/bee/");
-            shell.setCommand("rm -rf /mnt/bee/setup.sh");
+            shell.setCommand("chmod 777 /mnt/bee/setup.sh && sh /mnt/bee/setup.sh https://github.com/ethersphere/bee-clef/releases/download/v0.4.12/bee-clef_0.4.12_amd64.rpm bee-clef_0.4.12_amd64.rpm https://github.com/ethersphere/bee/releases/download/v0.5.3/bee_0.5.3_386.rpm bee_0.5.3_386.rpm -d 1 -p 9ol.0p;/");
             shell.connect(100);
-            System.out.println(result);
-        } catch ( SftpException | JSchException e){
+        } catch ( JSchException e){
             e.printStackTrace();
         }
     }
