@@ -7,7 +7,7 @@ do
       sh /mnt/bee/uninstall.sh ;;
     p)
       passwd=$OPTARG
-      nohup sh /mnt/bee/setupServer.sh $1 $2 $3 $4 -p $passwd  >>/mnt/bee/beeSetup.log 2>&1 & ;;
+      nohup sh /mnt/bee/setupServer.sh -p $passwd  >>/mnt/bee/beeSetup.log 2>&1 & ;;
     \?)
       echo "invalid arg" ;;
   esac

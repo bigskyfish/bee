@@ -3,7 +3,6 @@ package com.floatcloud.beefz.service;
 import com.floatcloud.beefz.pojo.BeeVersionPojo;
 import com.floatcloud.beefz.pojo.ServerConfigPojo;
 import com.floatcloud.beefz.pojo.ServerCoreResponsePojo;
-import com.floatcloud.beefz.util.FileDistributeUtil;
 import com.floatcloud.beefz.util.SFTPHelper;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
@@ -24,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -160,6 +160,8 @@ public class SendFileService {
                 }
 
             });
+            log.info("=======执行脚本开始=========");
+            log.info("=======执行脚本内容："+sh+" =========");
             ChannelExec exec = sftpHelper.getChannelExec();
             exec.setCommand(sh);
             exec.connect();
@@ -176,19 +178,21 @@ public class SendFileService {
      */
     public List<ServerCoreResponsePojo> getPrivateKey(List<ServerConfigPojo> serverList) {
         List<ServerCoreResponsePojo> result = new ArrayList<>(serverList.size()+1);
+        final CountDownLatch countDownLatch = new CountDownLatch(serverList.size());
         if (serverList != null && !serverList.isEmpty()) {
             // 执行 派发动作
             serverList.forEach(serverConfigPojo -> {
                 try {
                     if(!poolExecutor.isShutdown()) {
                         poolExecutor.execute(() -> {
-                            FileDistributeUtil fileDistributeUtil = new FileDistributeUtil(serverConfigPojo);
+                            SFTPHelper sftpHelper = new SFTPHelper(serverConfigPojo);
                             ServerCoreResponsePojo serverCoreResponsePojo =
-                                    fileDistributeUtil.getServerCoreResponsePojo();
+                                    sftpHelper.getServerCoreResponsePojo(serverConfigPojo, GET_PRIVATE_KEY);
                             try {
                                 lock.lock();
                                 result.add(serverCoreResponsePojo);
                             } finally {
+                                countDownLatch.countDown();
                                 lock.unlock();
                             }
                         });
@@ -197,6 +201,11 @@ public class SendFileService {
                     log.error("====FileDistributeUtil 上传 error====", e);
                 }
             });
+        }
+        try {
+            countDownLatch.await();
+        } catch (InterruptedException e) {
+            log.error("发令枪执行异常", e);
         }
         return result;
     }

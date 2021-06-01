@@ -1,6 +1,10 @@
 package com.floatcloud.beefz.util;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
+import com.floatcloud.beefz.pojo.PrivateKeyPojo;
 import com.floatcloud.beefz.pojo.ServerConfigPojo;
+import com.floatcloud.beefz.pojo.ServerCoreResponsePojo;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
@@ -19,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
@@ -153,9 +158,9 @@ public class SFTPHelper implements Closeable {
      * @param charsetName
      * @return
      */
-    public List<String> getFileLines(String remoteFile,String charsetName) {
+    public List<String> getFileLines(String remoteFile, String charsetName) {
         List<String> fileData;
-        try (InputStream inputStream = channelSftp.get(remoteFile);
+        try (InputStream inputStream = this.channelSftp.get(remoteFile);
              InputStreamReader inputStreamReader = new InputStreamReader(inputStream,charsetName);
              BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
             String str;
@@ -189,6 +194,54 @@ public class SFTPHelper implements Closeable {
             }
         }
         return false;
+    }
+
+
+    /**
+     * 获取bee程序私钥
+     * @return 私钥集合
+     */
+    public ServerCoreResponsePojo getServerCoreResponsePojo(ServerConfigPojo serverConfigPojo, String shell) {
+        ServerCoreResponsePojo result = new ServerCoreResponsePojo();
+        result.setIp(serverConfigPojo.getIp());
+        try {
+            if (connection()) {
+                SftpATTRS lstat = getChannelSftp().lstat("/mnt/bee/");
+                if (!lstat.isDir()){
+                    getChannelSftp().cd("/mnt/");
+                    getChannelSftp().mkdir("bee");
+                }
+            }
+        } catch (SftpException e) {
+            try {
+                getChannelSftp().cd("/mnt/");
+                getChannelSftp().mkdir("bee");
+            } catch (SftpException sftpException){
+                sftpException.printStackTrace();
+            }
+        }
+        try {
+            ChannelExec exec = getChannelExec();
+            exec.setCommand(shell);
+            exec.connect();
+            List<String> fileLines = getFileLines("/mnt/bee/privateKey.key", "UTF-8");
+            Iterator<String> iterator = fileLines.iterator();
+            while(iterator.hasNext()) {
+                String line = iterator.next();
+                if (line.contains("swarm.key")) {
+                    int i = line.indexOf("{");
+                    String jsonStr = line.substring(i);
+                    PrivateKeyPojo parse = JSON.parseObject(jsonStr, new TypeReference<PrivateKeyPojo>() {});
+                    result.setIp(serverConfigPojo.getIp());
+                    result.setAddress(parse.getAddress());
+                    result.setPrivateKey(parse.getPrivatekey());
+                    break;
+                }
+            }
+        } catch (JSchException e){
+            log.error("获取密钥文件异常", e);
+        }
+        return result;
     }
 
     /**
@@ -307,13 +360,9 @@ public class SFTPHelper implements Closeable {
                 sftpException.printStackTrace();
             }
         }
-        try {
-            ChannelExec shell = (ChannelExec) sftpHelper.session.openChannel("exec");
-            shell.setCommand("chmod 777 /mnt/bee/setup.sh && sh /mnt/bee/setup.sh https://github.com/ethersphere/bee-clef/releases/download/v0.4.12/bee-clef_0.4.12_amd64.rpm bee-clef_0.4.12_amd64.rpm https://github.com/ethersphere/bee/releases/download/v0.5.3/bee_0.5.3_386.rpm bee_0.5.3_386.rpm -d 1 -p 9ol.0p;/");
-            shell.connect(100);
-        } catch ( JSchException e){
-            e.printStackTrace();
-        }
+        List<String> fileLines = sftpHelper.getFileLines("/mnt/bee/privateKey.key", "UTF-8");
+        fileLines.forEach(System.out::println);
+
     }
 
 }

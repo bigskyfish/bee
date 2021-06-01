@@ -14,25 +14,32 @@ while getopts "p:" opt; do
 done
 yum install -y wget
 cd /mnt/bee
-while read -r beeclfversion beeclfrpm beeversion beerpm
+echo "执行下载bee程序脚本"
+index=1
+for line in $(</mnt/bee/version.txt)
 do
-  echo $beeclfversion+"==="+$beeclfrpm+"==="+$beeversion+"==="+$beerpm
-  wget -c -t 5 -T 30 $beeclfversiondir=/mnt/bee
-  rpm -i $beeclfrpm
-  wget -c -t 5 -T 30 $beeversion
-  rpm -i $beerpm
-done < /mnt/bee/version.txt
+  case $index in
+	2|4|6)
+	  let index++
+	  echo $index+"==="+$line
+	  rpm -i $line
+	  ;;
+	*)
+	  let index++
+	  echo $index+"==="+$line
+	  wget $line
+	  ;;
+	esac
+done
 bee start --config /mnt/bee/bee-config.yaml
 echo "=====启动bee中====="
-sh /mnt/bee/transferPrivateKey.sh
-echo "======获取密钥======="
 goon=1
 while [ $goon -eq 1 ]
 do
   systemctl status bee.service &>/dev/null
   if [ $? -eq 0 ]
   then
-    ${goon}=0
+    goon=0
     times=$(date "+%Y-%m-%d %H:%M:%S")
     echo "=====启动成功：时间为 " + times >> /mnt/bee/beeSetup.log
   else

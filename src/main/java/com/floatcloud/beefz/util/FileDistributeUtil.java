@@ -5,10 +5,22 @@ import com.alibaba.fastjson.TypeReference;
 import com.floatcloud.beefz.pojo.PrivateKeyPojo;
 import com.floatcloud.beefz.pojo.ServerConfigPojo;
 import com.floatcloud.beefz.pojo.ServerCoreResponsePojo;
-import com.jcraft.jsch.*;
+import com.jcraft.jsch.ChannelExec;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.JSchException;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpATTRS;
+import com.jcraft.jsch.SftpException;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -76,7 +88,7 @@ public class FileDistributeUtil {
 
     public void createDir(String createpath) {
         try {
-            if (isExistDir(createpath, sftp)) {
+            if (isExistDir(createpath)) {
                 sftp.cd(createpath);
             } else {
                 sftp.cd("/mnt/");
@@ -88,7 +100,7 @@ public class FileDistributeUtil {
     }
 
 
-    public boolean isExistDir(String path,ChannelSftp sftp){
+    public boolean isExistDir(String path){
         boolean isExist=false;
         try {
             SftpATTRS sftpReturn = this.sftp.lstat(path);
@@ -108,7 +120,7 @@ public class FileDistributeUtil {
      * 获取bee程序私钥
      * @return 私钥集合
      */
-    public ServerCoreResponsePojo getServerCoreResponsePojo() {
+    public ServerCoreResponsePojo getServerCoreResponsePojo(String shell) {
         ServerCoreResponsePojo result = new ServerCoreResponsePojo();
         result.setIp(serverConfigPojo.getIp());
         connect();
@@ -117,12 +129,11 @@ public class FileDistributeUtil {
         }
         try {
             sftp = (ChannelSftp) session.openChannel("sftp");
-            InputStream inputStream;
-            inputStream = sftp.get("/mnt/bee/privateKey.txt", new MyProgressMonitor());
-            sftp.connect();
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
-            String line = null;
-            while ((line = bufferedReader.readLine()) != null) {
+            exec = (ChannelExec) session.openChannel("exec");
+            exec.setCommand(shell);
+            exec.connect(30000);
+            List<String> fileLines = getFileLines("/mnt/bee/privateKey.key", "UTF-8");
+            fileLines.forEach(line -> {
                 if (line.contains("swarm.key")) {
                     int i = line.indexOf("{");
                     String jsonStr = line.substring(i);
@@ -131,17 +142,37 @@ public class FileDistributeUtil {
                     result.setIp(serverConfigPojo.getIp());
                     result.setAddress(parse.getAddress());
                     result.setPrivateKey(parse.getPrivatekey());
-                    break;
                 }
-            }
-        } catch (IOException | JSchException | SftpException e){
-            e.printStackTrace();
-        } finally {
-            if (sftp != null){
-                sftp.exit();
-            }
+            });
+        } catch (JSchException e){
+            log.error("获取密钥文件异常", e);
         }
         return result;
+    }
+
+
+    /**
+     * 读取sftp上指定（文本）文件数据,并按行返回数据集合
+     *
+     * @param remoteFile
+     * @param charsetName
+     * @return
+     */
+    public List<String> getFileLines(String remoteFile, String charsetName) {
+        List<String> fileData;
+        try (InputStream inputStream = sftp.get(remoteFile);
+             InputStreamReader inputStreamReader = new InputStreamReader(inputStream,charsetName);
+             BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
+            String str;
+            fileData = new ArrayList<>();
+            while((str = bufferedReader.readLine()) != null){
+                fileData.add(str);
+            }
+        } catch (Exception e) {
+            log.error("getFileData remoteFile:{},error:{}", remoteFile, e);
+            fileData = null;
+        }
+        return fileData;
     }
 
 
@@ -200,7 +231,7 @@ public class FileDistributeUtil {
     public static void main(String[] args) throws JSchException, SftpException {
         ServerConfigPojo serverConfigPojo = new ServerConfigPojo("47.98.53.84", "root","9ol.0p;/",22);
         FileDistributeUtil fileDistributeUtil = new FileDistributeUtil(serverConfigPojo);
-        ServerCoreResponsePojo serverCoreResponsePojo = fileDistributeUtil.getServerCoreResponsePojo();
+        ServerCoreResponsePojo serverCoreResponsePojo = fileDistributeUtil.getServerCoreResponsePojo("chmod 777 transferPrivateKey.sh && sh transferPrivateKey.sh");
         System.out.println(serverCoreResponsePojo.toString());
     }
 
