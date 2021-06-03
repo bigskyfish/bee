@@ -1,15 +1,13 @@
 package com.floatcloud.beefz.controller;
 
 import com.floatcloud.beefz.pojo.BeeVersionPojo;
-import com.floatcloud.beefz.pojo.ServerCoreResponsePojo;
 import com.floatcloud.beefz.service.SendFileService;
 import com.floatcloud.beefz.util.FileEditUtil;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
+import org.springframework.web.servlet.ModelAndView;
 
 import javax.annotation.Resource;
 
@@ -31,12 +29,21 @@ public class SendFileController {
         beeVersionPojo.setBeeVersion(beeVersion);
         beeVersionPojo.setBeeRpm(beeRpm);
         sendFileService.sendFileToRemote(FileEditUtil.getServers(), beeVersionPojo, remove);
-        return "";
+        return "发送成功";
     }
 
     @GetMapping("/private/keys")
-    public List<ServerCoreResponsePojo> getPrivateKeys(){
-        return sendFileService.getPrivateKey(FileEditUtil.getServers());
+    public ModelAndView getPrivateKeys(){
+        ModelAndView modelAndView = new ModelAndView();
+        modelAndView.addObject("servers", sendFileService.getPrivateKey(FileEditUtil.getServers()));
+        modelAndView.setViewName("beeServer");
+        return modelAndView;
+    }
+
+    @GetMapping("/bee/restart")
+    public String restartBee(){
+        sendFileService.restartBeeServer(FileEditUtil.getServers());
+        return "重启成功！";
     }
 
 }

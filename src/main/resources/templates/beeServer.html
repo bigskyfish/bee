@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="https://www.thymeleaf.org/">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h4 align="center"> 服务器展示数据！</h4>
+
+<table border="1">
+    <tr>
+        <th>服务器IP</th>
+        <th>Bee地址</th>
+        <th>服务状态</th>
+        <th>私钥</th>
+    </tr>
+    <tr th:each="server:${servers}">
+        <td th:text="${server.ip}"></td>
+        <td th:text="${server.address}"></td>
+        <td th:text="${server.status}"></td>
+        <td th:text="${server.privateKey}"></td>
+    </tr>
+</table>
+</body>
+</html>

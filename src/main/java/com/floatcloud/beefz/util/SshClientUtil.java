@@ -57,7 +57,7 @@ public class SshClientUtil {
 
 
     public static void main(String[] args) {
-        String shell = "chmod 777 /mnt/bee/setup.sh && sh /mnt/bee/setup.sh https://github.com/ethersphere/bee-clef/releases/download/v0.4.12/bee-clef_0.4.12_amd64.rpm bee-clef_0.4.12_amd64.rpm https://github.com/ethersphere/bee/releases/download/v0.5.3/bee_0.5.3_386.rpm bee_0.5.3_386.rpm  -d 1 -p 9ol.0p;/";
+        String shell = "cd /mnt/bee && bee start --config bee-config.yaml";
         SshClientUtil.exec(new ServerConfigPojo("47.98.53.84", "root", "9ol.0p;/", 22), shell);
     }
 }

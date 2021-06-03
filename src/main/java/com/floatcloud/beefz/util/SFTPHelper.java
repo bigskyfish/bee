@@ -2,6 +2,7 @@ package com.floatcloud.beefz.util;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.TypeReference;
+import com.floatcloud.beefz.constant.FileConstant;
 import com.floatcloud.beefz.pojo.PrivateKeyPojo;
 import com.floatcloud.beefz.pojo.ServerConfigPojo;
 import com.floatcloud.beefz.pojo.ServerCoreResponsePojo;
@@ -12,8 +13,10 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
 import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
@@ -81,6 +84,27 @@ public class SFTPHelper implements Closeable {
             log.error("init ip:{},userName:{},password:{} error:{}",serverConfigPojo.getIp(),
                     serverConfigPojo.getUser(), serverConfigPojo.getPassword(), e);
         }
+    }
+
+    /**
+     * 执行shell脚本
+     * @param shell
+     * @return
+     */
+    public boolean exec(String shell){
+        boolean result = true;
+        if(connection()){
+            ChannelExec exec = getChannelExec();
+            log.info("执行脚本内容为：{}", shell);
+            exec.setCommand(shell);
+            try {
+                exec.connect();
+            } catch (JSchException e){
+                log.error("执行脚本失败,脚本内容：{} 错误原因：{}", shell, e );
+                result = false;
+            }
+        }
+        return result;
     }
 
     /**
@@ -154,13 +178,23 @@ public class SFTPHelper implements Closeable {
     /**
      * 读取sftp上指定（文本）文件数据,并按行返回数据集合
      *
-     * @param remoteFile
+     * @param remotePath
      * @param charsetName
      * @return
      */
-    public List<String> getFileLines(String remoteFile, String charsetName) {
+    public List<String> getFileLines(String remotePath, String fileName, String charsetName) {
         List<String> fileData;
-        try (InputStream inputStream = this.channelSftp.get(remoteFile);
+        try {
+            long timeNum = 0;
+            while (!isExistFile(remotePath, fileName) && timeNum < 30) {
+                Thread.sleep(2000);
+                timeNum++;
+                log.info("查找文件中....次数{}", timeNum);
+            }
+        } catch (SftpException | InterruptedException e){
+            log.error("判断文件是否异常发生异常", e);
+        }
+        try (InputStream inputStream = this.channelSftp.get(remotePath + fileName);
              InputStreamReader inputStreamReader = new InputStreamReader(inputStream,charsetName);
              BufferedReader bufferedReader = new BufferedReader(inputStreamReader)) {
             String str;
@@ -169,10 +203,29 @@ public class SFTPHelper implements Closeable {
                 fileData.add(str);
             }
         } catch (Exception e) {
-            log.error("getFileData remoteFile:{},error:{}", remoteFile, e);
+            log.error("getFileData remoteFile:{},error:{}", remotePath+fileName, e);
             fileData = null;
         }
         return fileData;
+    }
+
+    /**
+     * 判断文件是否存在
+     * @param path 文件路径
+     * @param fileName 文件名
+     * @return 是否存在
+     * @throws SftpException sftp异常
+     */
+    public boolean isExistFile(String path, String fileName) throws SftpException {
+        if (connection()) {
+            final Vector vector = channelSftp.ls(path);
+            if (CollectionUtils.isEmpty(vector)) {
+                return false;
+            }
+            return vector.stream().filter(ChannelSftp.LsEntry.class::isInstance).map(ChannelSftp.LsEntry.class::cast)
+                    .anyMatch((lsEntry) -> StringUtils.equals(((ChannelSftp.LsEntry) lsEntry).getFilename(), fileName));
+        }
+        return false;
     }
 
 
@@ -202,8 +255,9 @@ public class SFTPHelper implements Closeable {
      * @return 私钥集合
      */
     public ServerCoreResponsePojo getServerCoreResponsePojo(ServerConfigPojo serverConfigPojo, String shell) {
-        ServerCoreResponsePojo result = new ServerCoreResponsePojo();
-        result.setIp(serverConfigPojo.getIp());
+        ServerCoreResponsePojo result = new ServerCoreResponsePojo.Builder()
+                .withIp(serverConfigPojo.getIp())
+                .build();
         try {
             if (connection()) {
                 SftpATTRS lstat = getChannelSftp().lstat("/mnt/bee/");
@@ -221,10 +275,14 @@ public class SFTPHelper implements Closeable {
             }
         }
         try {
-            ChannelExec exec = getChannelExec();
-            exec.setCommand(shell);
-            exec.connect();
-            List<String> fileLines = getFileLines("/mnt/bee/privateKey.key", "UTF-8");
+            if(!isExistFile(FileConstant.REMOTE_PATH, FileConstant.PRIVATE_KEY)) {
+                ChannelExec exec = getChannelExec();
+                String shellMsg = shell!= null && !shell.isEmpty() ? shell : "sh /mnt/bee/transferPrivateKey.sh";
+                log.info("执行脚本内容为：{}", shellMsg);
+                exec.setCommand(shellMsg);
+                exec.connect();
+            }
+            List<String> fileLines = getFileLines(FileConstant.REMOTE_PATH, FileConstant.PRIVATE_KEY, "UTF-8");
             Iterator<String> iterator = fileLines.iterator();
             while(iterator.hasNext()) {
                 String line = iterator.next();
@@ -232,14 +290,19 @@ public class SFTPHelper implements Closeable {
                     int i = line.indexOf("{");
                     String jsonStr = line.substring(i);
                     PrivateKeyPojo parse = JSON.parseObject(jsonStr, new TypeReference<PrivateKeyPojo>() {});
-                    result.setIp(serverConfigPojo.getIp());
                     result.setAddress(parse.getAddress());
                     result.setPrivateKey(parse.getPrivatekey());
                     break;
                 }
             }
-        } catch (JSchException e){
+        } catch (JSchException | SftpException e){
             log.error("获取密钥文件异常", e);
+        } finally {
+            try {
+                close();
+            } catch (IOException e){
+                log.error("连接关闭 IO 异常", e);
+            }
         }
         return result;
     }
@@ -334,13 +397,16 @@ public class SFTPHelper implements Closeable {
         if (channelSftp != null && channelSftp.isConnected()) {
             channelSftp.quit();
         }
+        if (channelExec != null && channelExec.isConnected()) {
+            channelExec.disconnect();
+        }
         if (session != null && session.isConnected()) {
             session.disconnect();
         }
         log.info("session and channel is closed");
     }
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SftpException, InterruptedException {
         String srcPath = System.getProperty("user.dir") + File.separator +"src" + File.separator;
         SFTPHelper sftpHelper= null;
         try {
@@ -360,9 +426,14 @@ public class SFTPHelper implements Closeable {
                 sftpException.printStackTrace();
             }
         }
-        List<String> fileLines = sftpHelper.getFileLines("/mnt/bee/privateKey.key", "UTF-8");
-        fileLines.forEach(System.out::println);
-
+//        List<String> fileLines = sftpHelper.getFileLines("/mnt/bee/privateKey.key", "UTF-8");
+//        fileLines.forEach(System.out::println);
+        boolean isExist = false;
+        while(!(isExist = sftpHelper.isExistFile("/mnt/bee/", "privateKeyss.key"))){
+            Thread.sleep(20000);
+            System.out.println("查找文件中....");
+        }
+        System.out.println("文件已存在");
     }
 
 }

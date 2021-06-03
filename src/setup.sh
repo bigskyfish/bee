@@ -12,3 +12,4 @@ do
       echo "invalid arg" ;;
   esac
 done
+exit

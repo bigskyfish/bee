@@ -121,7 +121,7 @@ public class FileDistributeUtil {
      * @return 私钥集合
      */
     public ServerCoreResponsePojo getServerCoreResponsePojo(String shell) {
-        ServerCoreResponsePojo result = new ServerCoreResponsePojo();
+        ServerCoreResponsePojo result = new ServerCoreResponsePojo.Builder().build();
         result.setIp(serverConfigPojo.getIp());
         connect();
         if (session == null){

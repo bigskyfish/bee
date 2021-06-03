@@ -3,6 +3,7 @@ package com.floatcloud.beefz.service;
 import com.floatcloud.beefz.pojo.BeeVersionPojo;
 import com.floatcloud.beefz.pojo.ServerConfigPojo;
 import com.floatcloud.beefz.pojo.ServerCoreResponsePojo;
+import com.floatcloud.beefz.sysenum.ServerStatusEnum;
 import com.floatcloud.beefz.util.SFTPHelper;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
@@ -73,7 +74,7 @@ public class SendFileService {
     /**
      * 执行删除bee
      */
-    public static final String GET_PRIVATE_KEY = "chmod 777 /mnt/bee/transferPrivateKey.sh && sh /mnt/bee/transferPrivateKey.sh";
+    public static final String GET_PRIVATE_KEY = "sh /mnt/bee/transferPrivateKey.sh";
 
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -186,12 +187,27 @@ public class SendFileService {
                     if(!poolExecutor.isShutdown()) {
                         poolExecutor.execute(() -> {
                             SFTPHelper sftpHelper = new SFTPHelper(serverConfigPojo);
-                            ServerCoreResponsePojo serverCoreResponsePojo =
-                                    sftpHelper.getServerCoreResponsePojo(serverConfigPojo, GET_PRIVATE_KEY);
+                            String beePath = "/etc/bee/";
+                            String beeFile = "bee.yaml";
+                            ServerCoreResponsePojo serverCoreResponsePojo = new ServerCoreResponsePojo.Builder()
+                                    .withIp(serverConfigPojo.getIp())
+                                    .build();
+                            try {
+                                if(sftpHelper.isExistFile(beePath, beeFile)){
+                                    serverCoreResponsePojo =  sftpHelper.getServerCoreResponsePojo(serverConfigPojo, GET_PRIVATE_KEY);
+                                    serverCoreResponsePojo.setStatusEnum(ServerStatusEnum.INSTANCE);
+                                    serverCoreResponsePojo.setStatus(ServerStatusEnum.INSTANCE.getType());
+                                } else {
+                                    serverCoreResponsePojo.setIp(serverConfigPojo.getIp());
+                                    serverCoreResponsePojo.setStatus(ServerStatusEnum.UN_INSTANCE.getType());
+                                }
+                            } catch (SftpException e) {
+                                log.error("查询bee.yaml文件报错");
+                            }
                             try {
                                 lock.lock();
                                 result.add(serverCoreResponsePojo);
-                            } finally {
+                            }finally {
                                 countDownLatch.countDown();
                                 lock.unlock();
                             }
@@ -209,4 +225,25 @@ public class SendFileService {
         }
         return result;
     }
+
+    /**
+     * 重启指定服务器的bee
+     * @param serverList
+     * @return
+     */
+    public void restartBeeServer(List<ServerConfigPojo> serverList){
+        shellBeeServer(serverList, "sh /mnt/bee/restart.sh");
+    }
+
+    /**
+     * shell 执行方法
+     * @param serverList
+     * @param shell
+     */
+    public void shellBeeServer(List<ServerConfigPojo> serverList, String shell){
+        if(serverList != null  && !serverList.isEmpty()){
+            serverList.forEach( serverConfigPojo -> poolExecutor.execute(() -> new SFTPHelper(serverConfigPojo).exec(shell)));
+        }
+    }
+
 }

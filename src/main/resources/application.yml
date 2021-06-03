@@ -2,8 +2,9 @@ server:
   port: 8080
 
 
+
 # \u914D\u7F6E\u4E0A\u4F20\u7684\u6587\u4EF6
-beedata: bee-config.yaml,setup.sh,setupServer.sh,transferPrivateKey.sh,uninstall.sh,clearBeeLog.sh,version.txt
+beedata: bee-config.yaml,setup.sh,setupServer.sh,transferPrivateKey.sh,uninstall.sh,clearBeeLog.sh,version.txt,beeRestart.sh,restart.sh
 
 bee:
   clef:
@@ -11,3 +12,10 @@ bee:
     rpm: bee-clef_0.4.12_amd64.rpm
   version: https://github.com/ethersphere/bee/releases/download/v0.6.1/bee_0.6.1_386.rpm
   rpm: bee_0.6.1_386.rpm
+spring:
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    encoding: UTF-8
+    suffix: .html
+    mode: HTML
