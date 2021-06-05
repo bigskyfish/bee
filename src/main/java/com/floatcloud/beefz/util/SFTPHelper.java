@@ -254,45 +254,31 @@ public class SFTPHelper implements Closeable {
      * 获取bee程序私钥
      * @return 私钥集合
      */
-    public ServerCoreResponsePojo getServerCoreResponsePojo(ServerConfigPojo serverConfigPojo, String shell) {
-        ServerCoreResponsePojo result = new ServerCoreResponsePojo.Builder()
-                .withIp(serverConfigPojo.getIp())
-                .build();
+    public ServerCoreResponsePojo getServerCoreResponsePojo(ServerCoreResponsePojo result, String shell) {
         try {
             if (connection()) {
-                SftpATTRS lstat = getChannelSftp().lstat("/mnt/bee/");
-                if (!lstat.isDir()){
-                    getChannelSftp().cd("/mnt/");
-                    getChannelSftp().mkdir("bee");
+                String nodeName = result.getNodeName();
+                String remoteKeyPath = FileConstant.REMOTE_PATH + nodeName + "/";
+                if (!isExistFile(remoteKeyPath, FileConstant.PRIVATE_KEY)) {
+                    ChannelExec exec = getChannelExec();
+                    String shellMsg = shell != null && !shell.isEmpty() ? shell : "sh /mnt/beeCli/transferPrivateKey.sh";
+                    log.info("执行脚本内容为：{}", shellMsg);
+                    exec.setCommand(shellMsg);
+                    exec.connect();
                 }
-            }
-        } catch (SftpException e) {
-            try {
-                getChannelSftp().cd("/mnt/");
-                getChannelSftp().mkdir("bee");
-            } catch (SftpException sftpException){
-                sftpException.printStackTrace();
-            }
-        }
-        try {
-            if(!isExistFile(FileConstant.REMOTE_PATH, FileConstant.PRIVATE_KEY)) {
-                ChannelExec exec = getChannelExec();
-                String shellMsg = shell!= null && !shell.isEmpty() ? shell : "sh /mnt/bee/transferPrivateKey.sh";
-                log.info("执行脚本内容为：{}", shellMsg);
-                exec.setCommand(shellMsg);
-                exec.connect();
-            }
-            List<String> fileLines = getFileLines(FileConstant.REMOTE_PATH, FileConstant.PRIVATE_KEY, "UTF-8");
-            Iterator<String> iterator = fileLines.iterator();
-            while(iterator.hasNext()) {
-                String line = iterator.next();
-                if (line.contains("swarm.key")) {
-                    int i = line.indexOf("{");
-                    String jsonStr = line.substring(i);
-                    PrivateKeyPojo parse = JSON.parseObject(jsonStr, new TypeReference<PrivateKeyPojo>() {});
-                    result.setAddress(parse.getAddress());
-                    result.setPrivateKey(parse.getPrivatekey());
-                    break;
+                List<String> fileLines = getFileLines(remoteKeyPath, FileConstant.PRIVATE_KEY, "UTF-8");
+                Iterator<String> iterator = fileLines.iterator();
+                while (iterator.hasNext()) {
+                    String line = iterator.next();
+                    if (line.contains("swarm.key")) {
+                        int i = line.indexOf("{");
+                        String jsonStr = line.substring(i);
+                        PrivateKeyPojo parse = JSON.parseObject(jsonStr, new TypeReference<PrivateKeyPojo>() {
+                        });
+                        result.setAddress(parse.getAddress());
+                        result.setPrivateKey(parse.getPrivatekey());
+                        break;
+                    }
                 }
             }
         } catch (JSchException | SftpException e){
@@ -410,7 +396,7 @@ public class SFTPHelper implements Closeable {
         String srcPath = System.getProperty("user.dir") + File.separator +"src" + File.separator;
         SFTPHelper sftpHelper= null;
         try {
-            sftpHelper = new SFTPHelper(new ServerConfigPojo("47.98.53.84", "root","9ol.0p;/",22));
+            //sftpHelper = new SFTPHelper(new ServerConfigPojo("47.98.53.84", "root","9ol.0p;/",22));
             if (sftpHelper.connection()) {
                 SftpATTRS lstat = sftpHelper.channelSftp.lstat("/mnt/bee/");
                 if (!lstat.isDir()){

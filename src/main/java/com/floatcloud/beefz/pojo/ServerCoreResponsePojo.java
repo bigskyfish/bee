@@ -16,6 +16,7 @@ public class ServerCoreResponsePojo {
     private String privateKey;
     private ServerStatusEnum statusEnum;
     private String status;
+    private String nodeName;
 
     public ServerCoreResponsePojo(Builder builder){
         this.address = builder.address;
@@ -23,6 +24,7 @@ public class ServerCoreResponsePojo {
         this.privateKey = builder.privateKey;
         this.statusEnum = builder.statusEnum;
         this.status = builder.status;
+        this.nodeName = builder.nodeName;
     }
 
     public static class Builder{
@@ -31,6 +33,7 @@ public class ServerCoreResponsePojo {
         private String privateKey;
         private ServerStatusEnum statusEnum = ServerStatusEnum.UN_INSTANCE;
         private String status = ServerStatusEnum.UN_INSTANCE.getType();
+        private String nodeName;
 
         public Builder withAddress(String address) {
             this.address = address;
@@ -54,6 +57,11 @@ public class ServerCoreResponsePojo {
 
         public Builder withStatus(String status) {
             this.status = status;
+            return this;
+        }
+
+        public Builder withNodeName(String nodeName){
+            this.nodeName = nodeName;
             return this;
         }
 

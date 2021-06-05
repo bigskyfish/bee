@@ -1,6 +1,7 @@
 package com.floatcloud.beefz.controller;
 
 import com.floatcloud.beefz.pojo.BeeVersionPojo;
+import com.floatcloud.beefz.pojo.ServerCoreResponsePojo;
 import com.floatcloud.beefz.service.SendFileService;
 import com.floatcloud.beefz.util.FileEditUtil;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,6 +9,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
+
+import java.util.List;
 
 import javax.annotation.Resource;
 
@@ -33,10 +36,16 @@ public class SendFileController {
     }
 
     @GetMapping("/private/keys")
-    public ModelAndView getPrivateKeys(){
+    public ModelAndView getPrivateKeys(@RequestParam(defaultValue = "1") String downLoad,
+                                       @RequestParam(defaultValue = "0.01") String ethNum,
+                                       @RequestParam(defaultValue = "20") String gBzzNum){
         ModelAndView modelAndView = new ModelAndView();
-        modelAndView.addObject("servers", sendFileService.getPrivateKey(FileEditUtil.getServers()));
+        List<ServerCoreResponsePojo> privateKeyList = sendFileService.getPrivateKey(FileEditUtil.getServers());
+        modelAndView.addObject("servers", privateKeyList);
         modelAndView.setViewName("beeServer");
+        if ("1".endsWith(downLoad)){
+            sendFileService.downLoadBeeAddress(privateKeyList, ethNum, gBzzNum);
+        }
         return modelAndView;
     }
 
@@ -45,5 +54,6 @@ public class SendFileController {
         sendFileService.restartBeeServer(FileEditUtil.getServers());
         return "重启成功！";
     }
+
 
 }

@@ -229,10 +229,10 @@ public class FileDistributeUtil {
 
 
     public static void main(String[] args) throws JSchException, SftpException {
-        ServerConfigPojo serverConfigPojo = new ServerConfigPojo("47.98.53.84", "root","9ol.0p;/",22);
-        FileDistributeUtil fileDistributeUtil = new FileDistributeUtil(serverConfigPojo);
-        ServerCoreResponsePojo serverCoreResponsePojo = fileDistributeUtil.getServerCoreResponsePojo("chmod 777 transferPrivateKey.sh && sh transferPrivateKey.sh");
-        System.out.println(serverCoreResponsePojo.toString());
+//        ServerConfigPojo serverConfigPojo = new ServerConfigPojo("47.98.53.84", "root","9ol.0p;/",22);
+//        FileDistributeUtil fileDistributeUtil = new FileDistributeUtil(serverConfigPojo);
+//        ServerCoreResponsePojo serverCoreResponsePojo = fileDistributeUtil.getServerCoreResponsePojo("chmod 777 transferPrivateKey.sh && sh transferPrivateKey.sh");
+//        System.out.println(serverCoreResponsePojo.toString());
     }
 
 }

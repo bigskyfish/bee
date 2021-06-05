@@ -2,19 +2,12 @@ package com.floatcloud.beefz.util;
 
 import com.floatcloud.beefz.constant.FileConstant;
 import com.floatcloud.beefz.pojo.ServerConfigPojo;
-import com.sun.deploy.net.MessageHeader;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +37,8 @@ public class FileEditUtil {
                     configPojo.setUser(serverInfos[1]);
                     configPojo.setPassword(serverInfos[2]);
                     configPojo.setPort(Integer.valueOf(serverInfos[3]));
+                    configPojo.setEndPoint(serverInfos[4]);
+                    configPojo.setNodeNum(Integer.valueOf(serverInfos[5]));
                     serverConfigPojos.add(configPojo);
                 }
             }

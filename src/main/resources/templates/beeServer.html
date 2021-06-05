@@ -10,12 +10,14 @@
 <table border="1">
     <tr>
         <th>服务器IP</th>
+        <th>节点名称</th>
         <th>Bee地址</th>
         <th>服务状态</th>
         <th>私钥</th>
     </tr>
     <tr th:each="server:${servers}">
         <td th:text="${server.ip}"></td>
+        <td th:text="${server.nodeName}"></td>
         <td th:text="${server.address}"></td>
         <td th:text="${server.status}"></td>
         <td th:text="${server.privateKey}"></td>

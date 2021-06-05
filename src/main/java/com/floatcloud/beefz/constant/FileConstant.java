@@ -17,8 +17,9 @@ public class FileConstant {
 
     public static final String UN_INSTALL = "uninstall.sh";
 
-    public static final String REMOTE_PATH = "/mnt/bee/";
+    public static final String REMOTE_PATH = "/mnt/";
 
     public static final String PRIVATE_KEY = "privateKey.key";
+
 
 }

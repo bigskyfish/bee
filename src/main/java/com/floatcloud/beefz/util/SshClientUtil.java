@@ -58,6 +58,6 @@ public class SshClientUtil {
 
     public static void main(String[] args) {
         String shell = "cd /mnt/bee && bee start --config bee-config.yaml";
-        SshClientUtil.exec(new ServerConfigPojo("47.98.53.84", "root", "9ol.0p;/", 22), shell);
+        //SshClientUtil.exec(new ServerConfigPojo("47.98.53.84", "root", "9ol.0p;/", 22), shell);
     }
 }

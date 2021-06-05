@@ -15,9 +15,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -43,7 +45,7 @@ public class SendFileService {
     /**
      * 上传到服务器的地址
      */
-    public static final String REMOTE_FOLDER = "/mnt/bee/";
+    public static final String REMOTE_FOLDER = "/mnt/beeCli/";
 
 
     private final ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(25, 100, 5,
@@ -69,12 +71,12 @@ public class SendFileService {
     /**
      * 不执行删除bee
      */
-    public static final String SHELL_BEE_SET_UP = "chmod 777 /mnt/bee/setup.sh && sh /mnt/bee/setup.sh ";
+    public static final String SHELL_BEE_SET_UP = "chmod 777 /mnt/beeCli/setup.sh && sh /mnt/beeCli/setup.sh ";
 
     /**
-     * 执行删除bee
+     * 执行获取私钥
      */
-    public static final String GET_PRIVATE_KEY = "sh /mnt/bee/transferPrivateKey.sh";
+    public static final String GET_PRIVATE_KEY = "sh /mnt/beeCli/transferPrivateKey.sh ";
 
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -88,7 +90,6 @@ public class SendFileService {
     public void sendFileToRemote(List<ServerConfigPojo> serverList, BeeVersionPojo beeVersionPojo, Integer remove) {
         String[] split = fileNameStr.split(",");
         List<String> filenames = Stream.of(split).collect(Collectors.toList());
-        final String shell = remove == 1 ? SHELL_BEE_SET_UP + "-d 1 -p " : SHELL_BEE_SET_UP + "-p ";
         if (serverList != null && !serverList.isEmpty()) {
             // 执行 派发动作
             serverList.forEach(serverConfigPojo -> {
@@ -96,7 +97,9 @@ public class SendFileService {
                     if(!poolExecutor.isShutdown()) {
                         poolExecutor.execute(() -> {
                             try {
-                                beeSetup(serverConfigPojo, filenames, beeVersionPojo, shell + serverConfigPojo.getPassword());
+                                String shell = SHELL_BEE_SET_UP + serverConfigPojo.getEndPoint() + " " + serverConfigPojo.getPassword()
+                                        + " " + serverConfigPojo.getNodeNum();
+                                beeSetup(serverConfigPojo, filenames, beeVersionPojo, shell);
                             } catch (Exception e) {
                                 log.error("====SshClientUtil 执行脚本 error====", e);
                             }
@@ -132,13 +135,13 @@ public class SendFileService {
                 SftpATTRS lstat = channelSftp.lstat(REMOTE_FOLDER);
                 if (!lstat.isDir()){
                     channelSftp.cd("/mnt/");
-                    channelSftp.mkdir("bee");
+                    channelSftp.mkdir("beeCli");
                 }
             }
         } catch (SftpException e) {
             try {
                 channelSftp.cd("/mnt/");
-                channelSftp.mkdir("bee");
+                channelSftp.mkdir("beeCli");
             } catch (SftpException sftpException){
                 sftpException.printStackTrace();
             }
@@ -178,38 +181,46 @@ public class SendFileService {
      * @param serverList 服务集合
      */
     public List<ServerCoreResponsePojo> getPrivateKey(List<ServerConfigPojo> serverList) {
-        List<ServerCoreResponsePojo> result = new ArrayList<>(serverList.size()+1);
-        final CountDownLatch countDownLatch = new CountDownLatch(serverList.size());
+        List<ServerCoreResponsePojo> result = new ArrayList<>();
         if (serverList != null && !serverList.isEmpty()) {
+            int nodeTotal = 0;
+            for (ServerConfigPojo serverConfigPojo : serverList) {
+                nodeTotal += serverConfigPojo.getNodeNum();
+            }
+            CountDownLatch countDownLatch = new CountDownLatch(nodeTotal);
             // 执行 派发动作
             serverList.forEach(serverConfigPojo -> {
                 try {
-                    if(!poolExecutor.isShutdown()) {
-                        poolExecutor.execute(() -> {
-                            SFTPHelper sftpHelper = new SFTPHelper(serverConfigPojo);
-                            String beePath = "/etc/bee/";
-                            String beeFile = "bee.yaml";
-                            ServerCoreResponsePojo serverCoreResponsePojo = new ServerCoreResponsePojo.Builder()
-                                    .withIp(serverConfigPojo.getIp())
-                                    .build();
-                            try {
-                                if(sftpHelper.isExistFile(beePath, beeFile)){
-                                    serverCoreResponsePojo =  sftpHelper.getServerCoreResponsePojo(serverConfigPojo, GET_PRIVATE_KEY);
-                                    serverCoreResponsePojo.setStatusEnum(ServerStatusEnum.INSTANCE);
-                                    serverCoreResponsePojo.setStatus(ServerStatusEnum.INSTANCE.getType());
-                                } else {
-                                    serverCoreResponsePojo.setIp(serverConfigPojo.getIp());
-                                    serverCoreResponsePojo.setStatus(ServerStatusEnum.UN_INSTANCE.getType());
+                    if (!poolExecutor.isShutdown()) {
+                        poolExecutor.submit(() -> {
+                            Integer nodeNum = serverConfigPojo.getNodeNum();
+                            for (int i = 1; i <= nodeNum; i++) {
+                                SFTPHelper sftpHelper = new SFTPHelper(serverConfigPojo);
+                                String beePath = "/mnt/bee" + i + "/";
+                                String beeFile = "beeSetup.log";
+                                ServerCoreResponsePojo serverCoreResponsePojo = new ServerCoreResponsePojo.Builder()
+                                        .withIp(serverConfigPojo.getIp()).withNodeName("bee" + i)
+                                        .build();
+                                try {
+                                    if (sftpHelper.isExistFile(beePath, beeFile)) {
+                                        String shell = GET_PRIVATE_KEY + i;
+                                        serverCoreResponsePojo = sftpHelper.getServerCoreResponsePojo(serverCoreResponsePojo, shell);
+                                        serverCoreResponsePojo.setStatusEnum(ServerStatusEnum.INSTANCE);
+                                        serverCoreResponsePojo.setStatus(ServerStatusEnum.INSTANCE.getType());
+                                    } else {
+                                        serverCoreResponsePojo.setIp(serverConfigPojo.getIp());
+                                        serverCoreResponsePojo.setStatus(ServerStatusEnum.UN_INSTANCE.getType());
+                                    }
+                                } catch (SftpException e) {
+                                    log.error("查询bee.yaml文件报错");
                                 }
-                            } catch (SftpException e) {
-                                log.error("查询bee.yaml文件报错");
-                            }
-                            try {
-                                lock.lock();
-                                result.add(serverCoreResponsePojo);
-                            }finally {
-                                countDownLatch.countDown();
-                                lock.unlock();
+                                try {
+                                    lock.lock();
+                                    result.add(serverCoreResponsePojo);
+                                } finally {
+                                    countDownLatch.countDown();
+                                    lock.unlock();
+                                }
                             }
                         });
                     }
@@ -217,11 +228,11 @@ public class SendFileService {
                     log.error("====FileDistributeUtil 上传 error====", e);
                 }
             });
-        }
-        try {
-            countDownLatch.await();
-        } catch (InterruptedException e) {
-            log.error("发令枪执行异常", e);
+            try {
+                countDownLatch.await();
+            } catch (InterruptedException e){
+                log.error("计数器被中断");
+            }
         }
         return result;
     }
@@ -232,18 +243,91 @@ public class SendFileService {
      * @return
      */
     public void restartBeeServer(List<ServerConfigPojo> serverList){
-        shellBeeServer(serverList, "sh /mnt/bee/restart.sh");
+        shellBeeServer(serverList);
     }
 
     /**
      * shell 执行方法
      * @param serverList
-     * @param shell
      */
-    public void shellBeeServer(List<ServerConfigPojo> serverList, String shell){
+    public void shellBeeServer(List<ServerConfigPojo> serverList){
         if(serverList != null  && !serverList.isEmpty()){
-            serverList.forEach( serverConfigPojo -> poolExecutor.execute(() -> new SFTPHelper(serverConfigPojo).exec(shell)));
+            serverList.forEach( serverConfigPojo -> poolExecutor.execute(() -> {
+                List<Integer> errorNode = serverConfigPojo.getErrorNode();
+                errorNode.forEach(node->{
+                    String shell = "bee start --config /mnt/bee" + node +"/bee-config";
+                    new SFTPHelper(serverConfigPojo).exec(shell);
+                });
+            }));
         }
+    }
+
+    /**
+     * 生成转账专用文件
+     * @param privateKeyList 私钥数据
+     * @param ethNum 转的eth数量
+     * @param gBzzNum 转的gBZZ数量
+     */
+    public void downLoadBeeAddress(List<ServerCoreResponsePojo> privateKeyList, String ethNum, String gBzzNum) {
+        String filePath = System.getProperty("user.dir") + File.separator;
+        File ethFile = new File (filePath+"eth.csv");
+        File gBzzFile = new File(filePath+"gBzz.csv");
+        if(!ethFile.exists()){
+            try {
+                ethFile.createNewFile();
+            } catch (IOException e) {
+               log.error("创建eth文件异常");
+            }
+        }
+        if(!gBzzFile.exists()){
+            try {
+                gBzzFile.createNewFile();
+            } catch (IOException e) {
+                log.error("创建gBzz文件异常");
+            }
+        }
+        BufferedWriter ethWrite = null;
+        BufferedWriter gBzzWrite = null;
+        if(privateKeyList != null && !privateKeyList.isEmpty()){
+            try {
+                ethWrite = new BufferedWriter(new FileWriter(ethFile));
+                gBzzWrite = new BufferedWriter(new FileWriter(gBzzFile));
+                for (int i = 0; i < privateKeyList.size(); i++) {
+                    StringBuilder ethStr = new StringBuilder();
+                    StringBuilder gBzzStr = new StringBuilder();
+                    ethStr.append("0x").append(privateKeyList.get(i).getAddress()).append(",").append(ethNum);
+                    gBzzStr.append("0x").append(privateKeyList.get(i).getAddress()).append(",").append(gBzzNum);
+                    if (i != privateKeyList.size() - 1) {
+                        ethStr.append("\r");
+                        gBzzStr.append("\r");
+                    }
+                    ethWrite.write(ethStr.toString());
+                    gBzzWrite.write(gBzzStr.toString());
+                    ethWrite.flush();
+                    gBzzWrite.flush();
+                }
+            } catch (IOException e){
+                log.error("写入eth、gBzzAddress文件失败");
+            } finally {
+                if(ethWrite != null){
+                    try {
+                        ethWrite.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+                if(gBzzWrite != null){
+                    try {
+                        gBzzWrite.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+        }
+
     }
 
 }
