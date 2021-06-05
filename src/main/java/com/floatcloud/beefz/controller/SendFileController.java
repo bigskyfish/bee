@@ -1,10 +1,12 @@
 package com.floatcloud.beefz.controller;
 
 import com.floatcloud.beefz.pojo.BeeVersionPojo;
+import com.floatcloud.beefz.pojo.ServerConfigPojo;
 import com.floatcloud.beefz.pojo.ServerCoreResponsePojo;
 import com.floatcloud.beefz.service.SendFileService;
 import com.floatcloud.beefz.util.FileEditUtil;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -50,8 +52,13 @@ public class SendFileController {
     }
 
     @GetMapping("/bee/restart")
-    public String restartBee(){
-        sendFileService.restartBeeServer(FileEditUtil.getServers());
+    public String restartBee(@RequestParam(defaultValue = "1") String all,
+                             @RequestBody List<ServerConfigPojo> list){
+        List<ServerConfigPojo> restartServers = FileEditUtil.getServers();
+        if(list != null && !list.isEmpty()) {
+            restartServers = list;
+        }
+        sendFileService.restartBeeServer(restartServers, all);
         return "重启成功！";
     }
 

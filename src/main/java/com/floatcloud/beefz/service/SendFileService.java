@@ -242,22 +242,31 @@ public class SendFileService {
      * @param serverList
      * @return
      */
-    public void restartBeeServer(List<ServerConfigPojo> serverList){
-        shellBeeServer(serverList);
+    public void restartBeeServer(List<ServerConfigPojo> serverList, String  all){
+        shellBeeServer(serverList, all);
     }
 
     /**
      * shell 执行方法
      * @param serverList
      */
-    public void shellBeeServer(List<ServerConfigPojo> serverList){
+    public void shellBeeServer(List<ServerConfigPojo> serverList, String all){
         if(serverList != null  && !serverList.isEmpty()){
             serverList.forEach( serverConfigPojo -> poolExecutor.execute(() -> {
-                List<Integer> errorNode = serverConfigPojo.getErrorNode();
-                errorNode.forEach(node->{
-                    String shell = "bee start --config /mnt/bee" + node +"/bee-config";
-                    new SFTPHelper(serverConfigPojo).exec(shell);
-                });
+                if ("1".equals(all)) {
+                    // 同一IP中所有节点重启
+                    Integer nodeNum = serverConfigPojo.getNodeNum();
+                    for(int i = 0; i <= nodeNum; i++){
+                        String shell = "bee start --config /mnt/bee" + i + "/bee-config.yaml";
+                        new SFTPHelper(serverConfigPojo).exec(shell);
+                    }
+                } else {
+                    List<Integer> errorNode = serverConfigPojo.getErrorNode();
+                    errorNode.forEach(node -> {
+                        String shell = "bee start --config /mnt/bee" + node + "/bee-config.yaml";
+                        new SFTPHelper(serverConfigPojo).exec(shell);
+                    });
+                }
             }));
         }
     }

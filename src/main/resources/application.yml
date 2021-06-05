@@ -3,7 +3,7 @@ server:
 
 
 
-# \u914D\u7F6E\u4E0A\u4F20\u7684\u6587\u4EF6
+
 beedata: bee-config.yaml,setup.sh,setupServer.sh,transferPrivateKey.sh,uninstall.sh,clearBeeLog.sh,version.txt,beeRestart.sh,restart.sh
 
 bee:
@@ -19,3 +19,12 @@ spring:
     encoding: UTF-8
     suffix: .html
     mode: HTML
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/bee?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+    username: root
+    password: 123456
+
+mybatis:
+  mapper-locations: classpath:/mapper/*.xml
+  type-aliases-package: com.floatcloud.beefz.entity
