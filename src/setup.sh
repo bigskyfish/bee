@@ -1,14 +1,16 @@
 endpoint=$1
 psd=$2
+gas=$5
 node=1
 echo "====psd==="$psd
 chmod 777 /mnt/beeCli/bee-config.yaml
 chmod 777 /mnt/beeCli/transferPrivateKey.sh
 sed -i "s*_bee_config_password_*"$psd"*g" /mnt/beeCli/bee-config.yaml
 sed -i "s*_swap_endpoint_http_*"$endpoint"*g" /mnt/beeCli/bee-config.yaml
+sed -i "s*_transaction_gas_*"$gas"*g" /mnt/beeCli/bee-config.yaml
 sed -i "s*_bee_config_password_*"$psd"*g" /mnt/beeCli/transferPrivateKey.sh
-node=$3
-index=1
+index=$3
+node=$4
 cd /mnt/
 while(( $index<=$node ))
   do

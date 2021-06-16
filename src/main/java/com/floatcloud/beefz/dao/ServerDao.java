@@ -1,7 +1,8 @@
-package generate;
+package com.floatcloud.beefz.dao;
 
-import generator.Server;
+import org.apache.ibatis.annotations.Mapper;
 
+@Mapper
 public interface ServerDao {
     int deleteByPrimaryKey(Integer id);
 

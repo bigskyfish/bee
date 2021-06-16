@@ -1,10 +1,13 @@
 package com.floatcloud.beefz.service;
 
+import com.floatcloud.beefz.dao.Server;
+import com.floatcloud.beefz.dao.ServerDao;
 import com.floatcloud.beefz.pojo.BeeVersionPojo;
 import com.floatcloud.beefz.pojo.ServerConfigPojo;
 import com.floatcloud.beefz.pojo.ServerCoreResponsePojo;
 import com.floatcloud.beefz.sysenum.ServerStatusEnum;
 import com.floatcloud.beefz.util.SFTPHelper;
+import com.floatcloud.beefz.util.ServerTypeTransferUtil;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSchException;
@@ -12,6 +15,7 @@ import com.jcraft.jsch.SftpATTRS;
 import com.jcraft.jsch.SftpException;
 import io.micrometer.core.instrument.util.NamedThreadFactory;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -67,6 +71,9 @@ public class SendFileService {
     private String beeRpm;
 
 
+    @Autowired
+    private ServerDao serverDao;
+
 
     /**
      * 不执行删除bee
@@ -87,7 +94,8 @@ public class SendFileService {
      * 发送文件到远程服务器
      * @param serverList 服务集合
      */
-    public void sendFileToRemote(List<ServerConfigPojo> serverList, BeeVersionPojo beeVersionPojo, Integer remove) {
+    // @Transactional
+    public void sendFileToRemote(List<ServerConfigPojo> serverList, BeeVersionPojo beeVersionPojo, Integer remove, int gas) {
         String[] split = fileNameStr.split(",");
         List<String> filenames = Stream.of(split).collect(Collectors.toList());
         if (serverList != null && !serverList.isEmpty()) {
@@ -97,9 +105,17 @@ public class SendFileService {
                     if(!poolExecutor.isShutdown()) {
                         poolExecutor.execute(() -> {
                             try {
-                                String shell = SHELL_BEE_SET_UP + serverConfigPojo.getEndPoint() + " " + serverConfigPojo.getPassword()
-                                        + " " + serverConfigPojo.getNodeNum();
-                                beeSetup(serverConfigPojo, filenames, beeVersionPojo, shell);
+                                // String psd = serverConfigPojo.getPassword();
+                                String psd = "fzh01234";
+                                String shell = SHELL_BEE_SET_UP + serverConfigPojo.getEndPoint() + " " + psd
+                                        + " " + beeVersionPojo.getBeginIndex() + " " + serverConfigPojo.getNodeNum() + " " + gas;
+                                boolean result = beeSetup(serverConfigPojo, filenames, beeVersionPojo, shell);
+                                // 启动后插入数据库
+                                Server server = ServerTypeTransferUtil.transferServer(serverConfigPojo);
+                                server.setStatus(result?1:0);
+                                // serverDao.insertSelective(server);
+                                // TODO 插入节点表
+
                             } catch (Exception e) {
                                 log.error("====SshClientUtil 执行脚本 error====", e);
                             }
@@ -143,6 +159,7 @@ public class SendFileService {
                 channelSftp.cd("/mnt/");
                 channelSftp.mkdir("beeCli");
             } catch (SftpException sftpException){
+                result = false;
                 sftpException.printStackTrace();
             }
         }
@@ -170,6 +187,7 @@ public class SendFileService {
             exec.setCommand(sh);
             exec.connect();
         } catch (JSchException e){
+            result= false;
             e.printStackTrace();
         }
         return result;
@@ -256,14 +274,14 @@ public class SendFileService {
                 if ("1".equals(all)) {
                     // 同一IP中所有节点重启
                     Integer nodeNum = serverConfigPojo.getNodeNum();
-                    for(int i = 0; i <= nodeNum; i++){
-                        String shell = "bee start --config /mnt/bee" + i + "/bee-config.yaml";
-                        new SFTPHelper(serverConfigPojo).exec(shell);
+                    for(int i = 1; i <= nodeNum; i++){
+                        String shell = "sh /mnt/beeCli/beeRestart.sh " + i;
+                        boolean result = new SFTPHelper(serverConfigPojo).exec(shell);
                     }
                 } else {
                     List<Integer> errorNode = serverConfigPojo.getErrorNode();
                     errorNode.forEach(node -> {
-                        String shell = "bee start --config /mnt/bee" + node + "/bee-config.yaml";
+                        String shell = "sh /mnt/beeCli/beeRestart.sh " + node;
                         new SFTPHelper(serverConfigPojo).exec(shell);
                     });
                 }

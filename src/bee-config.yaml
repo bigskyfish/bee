@@ -37,6 +37,7 @@ swap-endpoint: _swap_endpoint_http_
 swap-factory-address: ""
 swap-initial-deposit: "10000000000000000"
 swap-legacy-factory-addresses: []
+swap-deployment-gas-price: _transaction_gas_
 tracing-enable: false
 tracing-endpoint: 127.0.0.1:6831
 tracing-service-name: bee

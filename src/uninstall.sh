@@ -12,10 +12,6 @@ rm -rf /var/lib/bee/
 rm -rf /etc/bee/
 rm -rf /var/lib/bee-clef/
 rm -rf /etc/bee-clef/
-# 卸载地址信息
-rm -rf /root/.bee/
-# 清空日志文件
-rm -rf /mnt/bee/beeSetup.log
 # 清除bee的所有任务
 ps -ef | grep bee | awk '{print $7}' | awk -F"/" '{ print $1 }'
-exit
+exit 0

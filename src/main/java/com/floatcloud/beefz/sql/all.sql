@@ -26,7 +26,8 @@ CREATE TABLE `server` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `server_ip_uindex` (`ip`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='数据库信息';
-
+-- 设置主键自增
+ALTER TABLE `server` MODIFY id INTEGER auto_increment;
 
 SET FOREIGN_KEY_CHECKS = 1;
 

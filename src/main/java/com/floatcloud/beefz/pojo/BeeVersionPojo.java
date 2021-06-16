@@ -17,6 +17,7 @@ public class BeeVersionPojo {
     private String beeClefVersion;
     private String beeClefRpm;
     private String beeVersion;
+    private int beginIndex = 1;
     private String beeRpm;
 
 }

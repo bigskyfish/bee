@@ -27,6 +27,7 @@ public class ServerCoreResponsePojo {
         this.nodeName = builder.nodeName;
     }
 
+
     public static class Builder{
         private String address;
         private String ip;

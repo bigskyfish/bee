@@ -1,7 +1,8 @@
-package generator;
+package com.floatcloud.beefz.dao;
+
+import lombok.Data;
 
 import java.io.Serializable;
-import lombok.Data;
 
 /**
  * server
@@ -9,10 +10,8 @@ import lombok.Data;
  */
 @Data
 public class Server implements Serializable {
-    /**
-     * 主键
-     */
-    private Integer id;
+
+    private int id;
 
     /**
      * ip地址
@@ -60,11 +59,7 @@ public class Server implements Serializable {
     private String detail;
 
     /**
-     * 服务器联通情况（检查网络）
-0：未连通（ping不同）
-1：已连通
+     * 服务器联通情况（检查网络）0：未连通（ping不同）1：已连通
      */
     private Integer status;
-
-    private static final long serialVersionUID = 1L;
 }

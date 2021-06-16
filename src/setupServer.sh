@@ -14,17 +14,17 @@ index=1
 for line in $(</mnt/beeCli/version.txt)
 do
   case $index in
-	2|4|6)
-	  let index++
-	  echo $index"==="$line
-	  rpm -i $line
-	  ;;
-	*)
-	  let index++
-	  echo $index"==="$line
-	  wget $line
-	  ;;
-	esac
+  2|4|6)
+    let index++
+    echo $index"==="$line
+    rpm -i $line
+    ;;
+  *)
+    let index++
+    echo $index"==="$line
+    wget $line
+    ;;
+  esac
 done
 while getopts "n:" opt;
 do
