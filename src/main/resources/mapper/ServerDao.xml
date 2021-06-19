@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.floatcloud.beefz.dao.ServerDao">
+  <resultMap id="BaseResultMap" type="com.floatcloud.beefz.dao.Server">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="ip" jdbcType="VARCHAR" property="ip" />
+    <result column="user" jdbcType="VARCHAR" property="user" />
+    <result column="psd" jdbcType="VARCHAR" property="psd" />
+    <result column="port" jdbcType="INTEGER" property="port" />
+    <result column="node_num" jdbcType="INTEGER" property="nodeNum" />
+    <result column="cpu_num" jdbcType="INTEGER" property="cpuNum" />
+    <result column="memory" jdbcType="VARCHAR" property="memory" />
+    <result column="band_width" jdbcType="VARCHAR" property="bandWidth" />
+    <result column="detail" jdbcType="VARCHAR" property="detail" />
+    <result column="status" jdbcType="INTEGER" property="status" />
+  </resultMap>
+  <sql id="Base_Column_List">id, ip, `user`, psd, port, node_num, cpu_num, memory, band_width, detail, `status`</sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from server
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from server
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.floatcloud.beefz.dao.Server" useGeneratedKeys="true">
+    insert into server (ip, `user`, psd, 
+      port, node_num, cpu_num, 
+      memory, band_width, detail, 
+      `status`)
+    values (#{ip,jdbcType=VARCHAR}, #{user,jdbcType=VARCHAR}, #{psd,jdbcType=VARCHAR}, 
+      #{port,jdbcType=INTEGER}, #{nodeNum,jdbcType=INTEGER}, #{cpuNum,jdbcType=INTEGER}, 
+      #{memory,jdbcType=VARCHAR}, #{bandWidth,jdbcType=VARCHAR}, #{detail,jdbcType=VARCHAR}, 
+      #{status,jdbcType=INTEGER})
+  </insert>
+  <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.floatcloud.beefz.dao.Server" useGeneratedKeys="true">
+    insert into server
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="ip != null">
+        ip,
+      </if>
+      <if test="user != null">
+        `user`,
+      </if>
+      <if test="psd != null">
+        psd,
+      </if>
+      <if test="port != null">
+        port,
+      </if>
+      <if test="nodeNum != null">
+        node_num,
+      </if>
+      <if test="cpuNum != null">
+        cpu_num,
+      </if>
+      <if test="memory != null">
+        memory,
+      </if>
+      <if test="bandWidth != null">
+        band_width,
+      </if>
+      <if test="detail != null">
+        detail,
+      </if>
+      <if test="status != null">
+        `status`,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="ip != null">
+        #{ip,jdbcType=VARCHAR},
+      </if>
+      <if test="user != null">
+        #{user,jdbcType=VARCHAR},
+      </if>
+      <if test="psd != null">
+        #{psd,jdbcType=VARCHAR},
+      </if>
+      <if test="port != null">
+        #{port,jdbcType=INTEGER},
+      </if>
+      <if test="nodeNum != null">
+        #{nodeNum,jdbcType=INTEGER},
+      </if>
+      <if test="cpuNum != null">
+        #{cpuNum,jdbcType=INTEGER},
+      </if>
+      <if test="memory != null">
+        #{memory,jdbcType=VARCHAR},
+      </if>
+      <if test="bandWidth != null">
+        #{bandWidth,jdbcType=VARCHAR},
+      </if>
+      <if test="detail != null">
+        #{detail,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        #{status,jdbcType=INTEGER},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.floatcloud.beefz.dao.Server">
+    update server
+    <set>
+      <if test="ip != null">
+        ip = #{ip,jdbcType=VARCHAR},
+      </if>
+      <if test="user != null">
+        `user` = #{user,jdbcType=VARCHAR},
+      </if>
+      <if test="psd != null">
+        psd = #{psd,jdbcType=VARCHAR},
+      </if>
+      <if test="port != null">
+        port = #{port,jdbcType=INTEGER},
+      </if>
+      <if test="nodeNum != null">
+        node_num = #{nodeNum,jdbcType=INTEGER},
+      </if>
+      <if test="cpuNum != null">
+        cpu_num = #{cpuNum,jdbcType=INTEGER},
+      </if>
+      <if test="memory != null">
+        memory = #{memory,jdbcType=VARCHAR},
+      </if>
+      <if test="bandWidth != null">
+        band_width = #{bandWidth,jdbcType=VARCHAR},
+      </if>
+      <if test="detail != null">
+        detail = #{detail,jdbcType=VARCHAR},
+      </if>
+      <if test="status != null">
+        `status` = #{status,jdbcType=INTEGER},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.floatcloud.beefz.dao.Server">
+    update server
+    set ip = #{ip,jdbcType=VARCHAR},
+      `user` = #{user,jdbcType=VARCHAR},
+      psd = #{psd,jdbcType=VARCHAR},
+      port = #{port,jdbcType=INTEGER},
+      node_num = #{nodeNum,jdbcType=INTEGER},
+      cpu_num = #{cpuNum,jdbcType=INTEGER},
+      memory = #{memory,jdbcType=VARCHAR},
+      band_width = #{bandWidth,jdbcType=VARCHAR},
+      detail = #{detail,jdbcType=VARCHAR},
+      `status` = #{status,jdbcType=INTEGER}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

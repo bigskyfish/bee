@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.floatcloud.beefz.dao.NodeDao">
+  <resultMap id="BaseResultMap" type="com.floatcloud.beefz.dao.Node">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="node_ip" jdbcType="VARCHAR" property="nodeIp" />
+    <result column="node_id" jdbcType="INTEGER" property="nodeId" />
+    <result column="node_name" jdbcType="VARCHAR" property="nodeName" />
+    <result column="node_status" jdbcType="INTEGER" property="nodeStatus" />
+    <result column="node_address" jdbcType="VARCHAR" property="nodeAddress" />
+    <result column="node_private_key" jdbcType="VARCHAR" property="nodePrivateKey" />
+    <result column="node_ticket_num" jdbcType="INTEGER" property="nodeTicketNum" />
+    <result column="node_detail" jdbcType="VARCHAR" property="nodeDetail" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, node_ip, node_id, node_name, node_status, node_address, node_private_key, node_ticket_num, 
+    node_detail
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select 
+    <include refid="Base_Column_List" />
+    from node
+    where id = #{id,jdbcType=INTEGER}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from node
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.floatcloud.beefz.dao.Node" useGeneratedKeys="true">
+    insert into node (node_ip, node_id, node_name, 
+      node_status, node_address, node_private_key, 
+      node_ticket_num, node_detail)
+    values (#{nodeIp,jdbcType=VARCHAR}, #{nodeId,jdbcType=INTEGER}, #{nodeName,jdbcType=VARCHAR}, 
+      #{nodeStatus,jdbcType=INTEGER}, #{nodeAddress,jdbcType=VARCHAR}, #{nodePrivateKey,jdbcType=VARCHAR}, 
+      #{nodeTicketNum,jdbcType=INTEGER}, #{nodeDetail,jdbcType=VARCHAR})
+  </insert>
+  <insert id="insertSelective" keyColumn="id" keyProperty="id" parameterType="com.floatcloud.beefz.dao.Node" useGeneratedKeys="true">
+    insert into node
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="nodeIp != null">
+        node_ip,
+      </if>
+      <if test="nodeId != null">
+        node_id,
+      </if>
+      <if test="nodeName != null">
+        node_name,
+      </if>
+      <if test="nodeStatus != null">
+        node_status,
+      </if>
+      <if test="nodeAddress != null">
+        node_address,
+      </if>
+      <if test="nodePrivateKey != null">
+        node_private_key,
+      </if>
+      <if test="nodeTicketNum != null">
+        node_ticket_num,
+      </if>
+      <if test="nodeDetail != null">
+        node_detail,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="nodeIp != null">
+        #{nodeIp,jdbcType=VARCHAR},
+      </if>
+      <if test="nodeId != null">
+        #{nodeId,jdbcType=INTEGER},
+      </if>
+      <if test="nodeName != null">
+        #{nodeName,jdbcType=VARCHAR},
+      </if>
+      <if test="nodeStatus != null">
+        #{nodeStatus,jdbcType=INTEGER},
+      </if>
+      <if test="nodeAddress != null">
+        #{nodeAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="nodePrivateKey != null">
+        #{nodePrivateKey,jdbcType=VARCHAR},
+      </if>
+      <if test="nodeTicketNum != null">
+        #{nodeTicketNum,jdbcType=INTEGER},
+      </if>
+      <if test="nodeDetail != null">
+        #{nodeDetail,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.floatcloud.beefz.dao.Node">
+    update node
+    <set>
+      <if test="nodeIp != null">
+        node_ip = #{nodeIp,jdbcType=VARCHAR},
+      </if>
+      <if test="nodeId != null">
+        node_id = #{nodeId,jdbcType=INTEGER},
+      </if>
+      <if test="nodeName != null">
+        node_name = #{nodeName,jdbcType=VARCHAR},
+      </if>
+      <if test="nodeStatus != null">
+        node_status = #{nodeStatus,jdbcType=INTEGER},
+      </if>
+      <if test="nodeAddress != null">
+        node_address = #{nodeAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="nodePrivateKey != null">
+        node_private_key = #{nodePrivateKey,jdbcType=VARCHAR},
+      </if>
+      <if test="nodeTicketNum != null">
+        node_ticket_num = #{nodeTicketNum,jdbcType=INTEGER},
+      </if>
+      <if test="nodeDetail != null">
+        node_detail = #{nodeDetail,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.floatcloud.beefz.dao.Node">
+    update node
+    set node_ip = #{nodeIp,jdbcType=VARCHAR},
+      node_id = #{nodeId,jdbcType=INTEGER},
+      node_name = #{nodeName,jdbcType=VARCHAR},
+      node_status = #{nodeStatus,jdbcType=INTEGER},
+      node_address = #{nodeAddress,jdbcType=VARCHAR},
+      node_private_key = #{nodePrivateKey,jdbcType=VARCHAR},
+      node_ticket_num = #{nodeTicketNum,jdbcType=INTEGER},
+      node_detail = #{nodeDetail,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>
