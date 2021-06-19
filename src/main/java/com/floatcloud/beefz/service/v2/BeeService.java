@@ -180,4 +180,24 @@ public class BeeService {
         }
     }
 
+
+    public void updateBeeNode(String ip, String addressStr){
+        if(addressStr != null && !addressStr.isEmpty()){
+            String[] stirs = addressStr.split(";");
+            if(stirs.length != 0){
+               for(String str : stirs){
+                   if(str != null && !str.isEmpty()){
+                       String[] split = str.split(",");
+                       int id = Integer.parseInt(split[0]);
+                       if(id != 0){
+                           String address = split[1].substring(1, split[1].length()-1);
+                           nodeDao.updateAddressByIpAndId(ip, id, address);
+                       } else {
+                           log.error("==============获取地址出错===========");
+                       }
+                   }
+               }
+            }
+        }
+    }
 }

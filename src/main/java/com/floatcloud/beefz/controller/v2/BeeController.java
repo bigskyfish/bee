@@ -4,10 +4,7 @@ import com.floatcloud.beefz.dao.Server;
 import com.floatcloud.beefz.pojo.ServerConfigPojo;
 import com.floatcloud.beefz.service.v2.BeeService;
 import com.floatcloud.beefz.util.FileEditUtil;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
 import java.util.List;
@@ -49,14 +46,18 @@ public class BeeController {
         return servers;
     }
 
-
-
-
     @GetMapping("/bee/setup")
     public String beeSetup(@RequestParam(defaultValue = "") String version) {
         List<Server> servers = beeService.getServers(-1);
         beeService.beeSetup(servers, version);
         return "发送成功";
+    }
+
+
+    @PostMapping("/address")
+    public void getAddress(@RequestParam String ip,
+                             @RequestParam String address){
+        beeService.updateBeeNode(ip, address);
     }
 
 
