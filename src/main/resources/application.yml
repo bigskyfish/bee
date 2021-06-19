@@ -1,6 +1,8 @@
 server:
   port: 8080
 
+host:
+beedata: setup.sh,address.sh,installBase.sh,listenRunning.sh,transferPrivateKey.sh
 spring:
   thymeleaf:
     cache: false

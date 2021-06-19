@@ -1,6 +1,3 @@
-cd /mnt/beeCli/
-wget https://github.com/ethersphere/exportSwarmKey/releases/download/v0.1.0/export-swarm-key-linux-386
-chmod a+x export-swarm-key-linux-386
 while getopts "n:" opt;
 do
    case $opt in

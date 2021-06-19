@@ -86,23 +86,30 @@ public class FileEditUtil {
      * 获取 服务列表
      * @return
      */
-    public static List<ServerConfigPojo> getServerList(File file) throws IOException {
+    public static List<ServerConfigPojo> getServerList(File file){
         List<ServerConfigPojo> result = new ArrayList<>(200);
-        FileInputStream inputStream = new FileInputStream(file);
-        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
-        String line;
-        boolean first = true;
-        while((line = bufferedReader.readLine()) != null){
-            if(first){
-                first = false;
-            } else {
-                String[] strs = line.split(",");
-                ServerConfigPojo configPojo = new ServerConfigPojo();
-                configPojo.setIp(strs[0]);
-                configPojo.setUser(strs[1]);
-                configPojo.setPassword(strs[2]);
-                result.add(configPojo);
+        try {
+            FileInputStream inputStream = new FileInputStream(file);
+            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+            String line;
+            boolean first = true;
+            while ((line = bufferedReader.readLine()) != null) {
+                if (first) {
+                    first = false;
+                } else {
+                    String[] serverInfos = line.split(",");
+                    ServerConfigPojo configPojo = new ServerConfigPojo();
+                    configPojo.setIp(serverInfos[0]);
+                    configPojo.setUser(serverInfos[1]);
+                    configPojo.setPassword(serverInfos[2]);
+                    configPojo.setPort(Integer.valueOf(serverInfos[3]));
+                    configPojo.setEndPoint(serverInfos[4]);
+                    configPojo.setNodeNum(Integer.valueOf(serverInfos[5]));
+                    result.add(configPojo);
+                }
             }
+        } catch (IOException e){
+            e.printStackTrace();
         }
         return result;
     }
