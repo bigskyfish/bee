@@ -10,7 +10,7 @@ do
   exist=`docker inspect --format '{{.State.Running}}' ${name}`
   if [ "${exist}" != "true" ]
     then {
-      echo "${now} 重启docker容器，容器名称：${name}" >> /mnt/beeCli/stop.log
+      echo "${now} 重启docker容器，容器名称：${name}" >> /mnt/beeCli/dockerStop.log
       docker start ${name}
     }
   fi

@@ -33,6 +33,8 @@ public class Server implements Serializable {
      */
     private Integer port;
 
+    private String endpoint;
+
     /**
      * 节点数
      */

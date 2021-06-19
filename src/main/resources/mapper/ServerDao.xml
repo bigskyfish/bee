@@ -7,6 +7,7 @@
     <result column="user" jdbcType="VARCHAR" property="user" />
     <result column="psd" jdbcType="VARCHAR" property="psd" />
     <result column="port" jdbcType="INTEGER" property="port" />
+    <result column="endpoint" jdbcType="VARCHAR" property="endpoint" />
     <result column="node_num" jdbcType="INTEGER" property="nodeNum" />
     <result column="cpu_num" jdbcType="INTEGER" property="cpuNum" />
     <result column="memory" jdbcType="VARCHAR" property="memory" />
@@ -14,7 +15,7 @@
     <result column="detail" jdbcType="VARCHAR" property="detail" />
     <result column="status" jdbcType="INTEGER" property="status" />
   </resultMap>
-  <sql id="Base_Column_List">id, ip, `user`, psd, port, node_num, cpu_num, memory, band_width, detail, `status`</sql>
+  <sql id="Base_Column_List">id, ip, `user`, psd, port, endpoint, node_num, cpu_num, memory, band_width, detail, `status`</sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
@@ -27,11 +28,11 @@
   </delete>
   <insert id="insert" keyColumn="id" keyProperty="id" parameterType="com.floatcloud.beefz.dao.Server" useGeneratedKeys="true">
     insert into server (ip, `user`, psd, 
-      port, node_num, cpu_num, 
+      port, endpoint, node_num, cpu_num,
       memory, band_width, detail, 
       `status`)
     values (#{ip,jdbcType=VARCHAR}, #{user,jdbcType=VARCHAR}, #{psd,jdbcType=VARCHAR}, 
-      #{port,jdbcType=INTEGER}, #{nodeNum,jdbcType=INTEGER}, #{cpuNum,jdbcType=INTEGER}, 
+      #{port,jdbcType=INTEGER}, #{endpoint,jdbcType=VARCHAR}, #{point,jdbcType=VARCHAR}, #{nodeNum,jdbcType=INTEGER}, #{cpuNum,jdbcType=INTEGER},
       #{memory,jdbcType=VARCHAR}, #{bandWidth,jdbcType=VARCHAR}, #{detail,jdbcType=VARCHAR}, 
       #{status,jdbcType=INTEGER})
   </insert>
@@ -49,6 +50,9 @@
       </if>
       <if test="port != null">
         port,
+      </if>
+      <if test="endpoint != null">
+        endpoint,
       </if>
       <if test="nodeNum != null">
         node_num,
@@ -81,6 +85,9 @@
       </if>
       <if test="port != null">
         #{port,jdbcType=INTEGER},
+      </if>
+      <if test="endpoint != null">
+        #{endpoint,jdbcType=VARCHAR},
       </if>
       <if test="nodeNum != null">
         #{nodeNum,jdbcType=INTEGER},
@@ -117,6 +124,9 @@
       <if test="port != null">
         port = #{port,jdbcType=INTEGER},
       </if>
+      <if test="endpoint != null">
+        psd = #{endpoint,jdbcType=VARCHAR},
+      </if>
       <if test="nodeNum != null">
         node_num = #{nodeNum,jdbcType=INTEGER},
       </if>
@@ -144,6 +154,7 @@
       `user` = #{user,jdbcType=VARCHAR},
       psd = #{psd,jdbcType=VARCHAR},
       port = #{port,jdbcType=INTEGER},
+      endpoint = #{endpoint,jdbcType=VARCHAR},
       node_num = #{nodeNum,jdbcType=INTEGER},
       cpu_num = #{cpuNum,jdbcType=INTEGER},
       memory = #{memory,jdbcType=VARCHAR},
