@@ -1,17 +1,6 @@
 server:
   port: 8080
 
-
-
-
-beedata: bee-config.yaml,setup.sh,setupServer.sh,transferPrivateKey.sh,uninstall.sh,clearBeeLog.sh,version.txt,beeRestart.sh,restart.sh
-
-bee:
-  clef:
-    version: https://github.com/ethersphere/bee-clef/releases/download/v0.4.12/bee-clef_0.4.12_amd64.rpm
-    rpm: bee-clef_0.4.12_amd64.rpm
-  version: https://github.com/ethersphere/bee/releases/download/v0.6.1/bee_0.6.1_386.rpm
-  rpm: bee_0.6.1_386.rpm
 spring:
   thymeleaf:
     cache: false

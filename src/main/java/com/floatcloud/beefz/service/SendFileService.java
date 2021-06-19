@@ -7,7 +7,6 @@ import com.floatcloud.beefz.pojo.ServerConfigPojo;
 import com.floatcloud.beefz.pojo.ServerCoreResponsePojo;
 import com.floatcloud.beefz.sysenum.ServerStatusEnum;
 import com.floatcloud.beefz.util.SFTPHelper;
-import com.floatcloud.beefz.util.ServerTypeTransferUtil;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSchException;
@@ -111,8 +110,8 @@ public class SendFileService {
                                         + " " + beeVersionPojo.getBeginIndex() + " " + serverConfigPojo.getNodeNum() + " " + gas;
                                 boolean result = beeSetup(serverConfigPojo, filenames, beeVersionPojo, shell);
                                 // 启动后插入数据库
-                                Server server = ServerTypeTransferUtil.transferServer(serverConfigPojo);
-                                server.setStatus(result?1:0);
+                                // Server server = ServerTypeTransferUtil.transferServer(serverConfigPojo);
+                                // server.setStatus(result?1:0);
                                 // serverDao.insertSelective(server);
                                 // TODO 插入节点表
 
