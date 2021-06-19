@@ -16,3 +16,4 @@ do
   sudo docker run -d --privileged=true -p ${port3}:1635 -p ${port2}:1634 -p ${port1}:1633 --name ${name} -it ${imageVersion} start --welcome-message="Bzzzz bzzz ${name}" --password="${psd}" --swap-endpoint ${swapPoint} --debug-api-enable
   echo "${name}容器创建成功!" 
 done
+

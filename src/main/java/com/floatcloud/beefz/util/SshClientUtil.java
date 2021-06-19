@@ -17,9 +17,9 @@ public class SshClientUtil {
 
 
     private String charset = Charset.defaultCharset().toString();
-    private static final int TIME_OUT = 1000 * 5 * 60;
+    private static final int TIME_OUT = 1000 * 10 * 60;
 
-    private static Connection conn;
+    private Connection conn;
 
 
     /**
@@ -27,13 +27,13 @@ public class SshClientUtil {
      * @return
      * @throws IOException
      */
-    private static boolean login(ServerConfigPojo serverConfigPojo) throws IOException {
+    private boolean login(ServerConfigPojo serverConfigPojo) throws IOException {
         conn = new Connection(serverConfigPojo.getIp());
         conn.connect();
         return conn.authenticateWithPassword(serverConfigPojo.getUser(), serverConfigPojo.getPassword());
     }
 
-    public static int exec(ServerConfigPojo serverConfigPojo, String shell) {
+    public int exec(ServerConfigPojo serverConfigPojo, String shell) {
         int ret = -1;
         try {
             if (login(serverConfigPojo)) {

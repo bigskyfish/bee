@@ -1,8 +1,8 @@
 server:
   port: 8080
 
-host:
-beedata: setup.sh,address.sh,installBase.sh,listenRunning.sh,transferPrivateKey.sh
+host: 47.98.53.84:8080
+beedata: setup.sh,address.sh,installBase.sh,listenRunning.sh,transferPrivateKey.sh,install.sh,openPort.sh
 spring:
   thymeleaf:
     cache: false

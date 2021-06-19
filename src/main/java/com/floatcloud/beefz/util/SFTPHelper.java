@@ -22,7 +22,6 @@ import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -284,11 +283,7 @@ public class SFTPHelper implements Closeable {
         } catch (JSchException | SftpException e){
             log.error("获取密钥文件异常", e);
         } finally {
-            try {
-                close();
-            } catch (IOException e){
-                log.error("连接关闭 IO 异常", e);
-            }
+            close();
         }
         return result;
     }
@@ -379,7 +374,7 @@ public class SFTPHelper implements Closeable {
      * 关闭连接资源
      */
     @Override
-    public void close() throws IOException {
+    public void close() {
         if (channelSftp != null && channelSftp.isConnected()) {
             channelSftp.quit();
         }

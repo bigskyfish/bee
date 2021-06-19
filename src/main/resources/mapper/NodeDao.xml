@@ -22,6 +22,10 @@
     from node
     where id = #{id,jdbcType=INTEGER}
   </select>
+  <select id="selectAll" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List" />
+    from node order by node_id group by node_ip
+  </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete from node
     where id = #{id,jdbcType=INTEGER}
@@ -131,4 +135,12 @@
       node_detail = #{nodeDetail,jdbcType=VARCHAR}
     where id = #{id,jdbcType=INTEGER}
   </update>
+
+  <update id="updateAddressByIpAndId" >
+    update node
+    set node_address=#{address, jdbcType=VARCHAR}
+    where node_address is null and node_ip=#{ip, jdbcType=VARCHAR} and node_id=#{id, jdbcType=INTEGER}
+  </update>
+
+
 </mapper>

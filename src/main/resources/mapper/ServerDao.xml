@@ -22,6 +22,29 @@
     from server
     where id = #{id,jdbcType=INTEGER}
   </select>
+
+  <select id="selectServersByStatus" parameterType="java.lang.Integer" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from server
+    where status = #{status,jdbcType=INTEGER}
+  </select>
+
+  <select id="selectServers" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from server
+    order by status
+  </select>
+
+
+  <select id="selectServersByIp" parameterType="java.lang.String" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from server
+    where ip = #{ip, jdbcType=VARCHAR}
+  </select>
+
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete from server
     where id = #{id,jdbcType=INTEGER}
@@ -163,4 +186,9 @@
       `status` = #{status,jdbcType=INTEGER}
     where id = #{id,jdbcType=INTEGER}
   </update>
+
+  <update id="updateStatus" >
+    update server set status = #{status, jdbcType=INTEGER} where ip = #{ip, jdbcType=VARCHAR}
+  </update>
+
 </mapper>

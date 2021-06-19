@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="https://www.thymeleaf.org/">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<h4 align="center"> 节点地址展示数据！</h4>
+
+<table border="1">
+    <tr>
+        <th>服务器IP</th>
+        <th>节点名称</th>
+        <th>Bee地址</th>
+    </tr>
+    <tr th:each="server:${servers}">
+        <td th:text="${server.ip}"></td>
+        <td th:text="${server.nodeName}"></td>
+        <td th:text="${server.address}"></td>
+    </tr>
+</table>
+</body>
+</html>

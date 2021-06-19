@@ -1,8 +1,6 @@
 package com.floatcloud.beefz.dao;
 
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Select;
-import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -12,13 +10,12 @@ public interface ServerDao {
 
     int insert(Server record);
 
-    @Select("select * from server where status = #{status, jdbcType=INTEGER}")
     List<Server> selectServersByStatus(int status);
 
-    @Select("select * from server order by status")
+    List<Server> selectServersByIp(String ip);
+
     List<Server> selectServers();
 
-    @Update("update server set status = #{status, jdbcType=INTEGER} where ip = #{ip, jdbcType=VARCHAR}")
     int updateStatus(String ip, int status);
 
     int insertSelective(Server record);

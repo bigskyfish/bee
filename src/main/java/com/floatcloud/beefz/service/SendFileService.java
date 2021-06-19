@@ -1,6 +1,5 @@
 package com.floatcloud.beefz.service;
 
-import com.floatcloud.beefz.dao.Server;
 import com.floatcloud.beefz.dao.ServerDao;
 import com.floatcloud.beefz.pojo.BeeVersionPojo;
 import com.floatcloud.beefz.pojo.ServerConfigPojo;
@@ -57,16 +56,16 @@ public class SendFileService {
     @Value("${beedata}")
     private String fileNameStr;
 
-    @Value("${bee.clef.version}")
+    //@Value("${bee.clef.version}")
     private String beeClefVersion;
 
-    @Value("${bee.version}")
+    //@Value("${bee.version}")
     private String beeVersion;
 
-    @Value("${bee.clef.rpm}")
+    // @Value("${bee.clef.rpm}")
     private String beeClefRpm;
 
-    @Value("${bee.rpm}")
+    //@Value("${bee.rpm}")
     private String beeRpm;
 
 

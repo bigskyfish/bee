@@ -19,4 +19,6 @@ echo "执行获取密钥的执行程序"
 wget https://github.com/ethersphere/exportSwarmKey/releases/download/v0.1.0/export-swarm-key-linux-386 -o /mnt/beeCli/export-swarm-key-linux-386
 chmod a+x /mnt/beeCli/export-swarm-key-linux-386
 # 添加端口
+chmod 777 /mnt/beeCli/openPort.sh
+nohup sh /mnt/beeCli/openPort.sh /dev/null &
 

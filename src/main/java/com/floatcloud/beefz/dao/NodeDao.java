@@ -1,7 +1,8 @@
 package com.floatcloud.beefz.dao;
 
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Update;
+
+import java.util.List;
 
 @Mapper
 public interface NodeDao {
@@ -17,6 +18,7 @@ public interface NodeDao {
 
     int updateByPrimaryKey(Node record);
 
-    @Update("update node set node_address=#{address, jdbcType=VARCHAR} where node_ip=#{ip, jdbcType=VARCHAR} and node_id=#{id, jdbcType=INTEGER}")
     int updateAddressByIpAndId(String ip, int id, String address);
+
+    List<Node> selectAll();
 }

@@ -5,8 +5,10 @@ import com.floatcloud.beefz.dao.NodeDao;
 import com.floatcloud.beefz.dao.Server;
 import com.floatcloud.beefz.dao.ServerDao;
 import com.floatcloud.beefz.pojo.ServerConfigPojo;
+import com.floatcloud.beefz.pojo.ServerCoreResponsePojo;
 import com.floatcloud.beefz.util.SFTPHelper;
 import com.floatcloud.beefz.util.ServerTypeTransferUtil;
+import com.floatcloud.beefz.util.SshClientUtil;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSchException;
@@ -18,9 +20,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -40,6 +45,9 @@ public class BeeService {
 
     @Autowired
     private NodeDao nodeDao;
+
+    @Value("${host}")
+    private String localhost;
 
     private final ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(16, 100, 5,
             TimeUnit.SECONDS, new ArrayBlockingQueue<>(500), new NamedThreadFactory("bee"));
@@ -61,7 +69,10 @@ public class BeeService {
         if(servers != null && !servers.isEmpty()){
             servers.forEach(serverConfigPojo -> {
                 Server server = ServerTypeTransferUtil.transferServer(serverConfigPojo);
-                serverDao.insertSelective(server);
+                List<Server> serverList = serverDao.selectServersByIp(server.getIp());
+                if(serverList == null || serverList.isEmpty()) {
+                    serverDao.insertSelective(server);
+                }
                 if(!poolExecutor.isShutdown()) {
                     poolExecutor.execute(() -> {
                         // 上传文件
@@ -81,6 +92,25 @@ public class BeeService {
         }
         return servers;
     }
+
+
+    /**
+     * 启动传递地址脚本
+     */
+    public void setupGetAddress(){
+        List<Server> servers = getServers(1);
+        if(servers != null && !servers.isEmpty()) {
+            servers.forEach(server -> {
+                ServerConfigPojo serverConfigPojo = ServerTypeTransferUtil.transferServerConfigPojo(server);
+                if (!poolExecutor.isShutdown()) {
+                    poolExecutor.execute(() -> doExecShell2(serverConfigPojo, "chmod 777 /mnt/beeCli/address.sh && sh /mnt/beeCli/address.sh "
+                    + localhost + " " + serverConfigPojo.getIp() + " " + serverConfigPojo.getNodeNum()));
+                }
+            });
+
+        }
+    }
+
 
 
     /**
@@ -124,7 +154,13 @@ public class BeeService {
             }
         });
         // 执行 基础程序下载安装脚本
-        execShell(serverConfigPojo, "sh /mnt/beeCli/installBase.sh");
+        if(!poolExecutor.isShutdown()) {
+            poolExecutor.execute(() -> {
+                doExecShell2(serverConfigPojo, "chmod 777 /mnt/beeCli/install.sh && nohup sh /mnt/beeCli/install.sh /dev/null &");
+            });
+        }
+        // 更新服务器信息状态
+        serverDao.updateStatus(serverConfigPojo.getIp(), 1);
     }
 
 
@@ -145,8 +181,9 @@ public class BeeService {
                     if(!poolExecutor.isShutdown()) {
                         poolExecutor.execute(() -> {
                             try {
-                                String shell = "sh /mnt/beeCli/setup.sh " + version+ " " + psd + " " + endPoint + " " + nodeNum;
-                                execShell(serverConfigPojo, shell);
+                                String shell = "nohup sh /mnt/beeCli/setup.sh " + version+ " " + psd + " " + endPoint + " " + nodeNum
+                                        + " >>/mnt/beeCli/setup.log 2>&1 &" ;
+                                doExecShell2(serverConfigPojo, shell);
                                 // 插入节点表
                                 Node node = new Node();
                                 for (int i= 1; i <= nodeNum; i++ ){
@@ -169,15 +206,30 @@ public class BeeService {
 
 
 
-    public void execShell(ServerConfigPojo serverConfigPojo, String sh) {
+
+
+    public void doExecShell(ServerConfigPojo serverConfigPojo, String sh) {
+        SFTPHelper sftpHelper = null;
         try {
-            SFTPHelper sftpHelper = new SFTPHelper(serverConfigPojo);
-            ChannelExec exec = sftpHelper.getChannelExec();
-            exec.setCommand(sh);
-            exec.connect();
+            sftpHelper = new SFTPHelper(serverConfigPojo);
+            if (sftpHelper.connection()) {
+                log.info("====执行shell====："+sh);
+                ChannelExec exec = sftpHelper.getChannelExec();
+                exec.setCommand(sh);
+                exec.connect();
+            }
         } catch (JSchException e){
             log.error("执行shell脚本失败", e);
+        } finally {
+            if(sftpHelper != null){
+                sftpHelper.close();
+            }
         }
+    }
+
+    public void doExecShell2(ServerConfigPojo serverConfigPojo, String sh) {
+        SshClientUtil sshClientUtil = new SshClientUtil();
+        sshClientUtil.exec(serverConfigPojo, sh);
     }
 
 
@@ -189,8 +241,8 @@ public class BeeService {
                    if(str != null && !str.isEmpty()){
                        String[] split = str.split(",");
                        int id = Integer.parseInt(split[0]);
-                       if(id != 0){
-                           String address = split[1].substring(1, split[1].length()-1);
+                       if(id != 0) {
+                           String address = split[1].endsWith("\"")?split[1].substring(1, split[1].length()-1):split[1];
                            nodeDao.updateAddressByIpAndId(ip, id, address);
                        } else {
                            log.error("==============获取地址出错===========");
@@ -199,5 +251,89 @@ public class BeeService {
                }
             }
         }
+    }
+
+
+    public List<ServerCoreResponsePojo> getAddress(){
+        List<ServerCoreResponsePojo> response = new ArrayList<>();
+        List<Node> nodes = nodeDao.selectAll();
+        if(nodes != null && !nodes.isEmpty()){
+            nodes.forEach(node -> {
+                ServerCoreResponsePojo serverCoreResponsePojo = new ServerCoreResponsePojo.Builder()
+                        .withIp(node.getNodeIp()).withNodeName(node.getNodeName())
+                        .withAddress(node.getNodeAddress()).build();
+                response.add(serverCoreResponsePojo);
+            });
+        }
+        return response;
+    }
+
+
+    /**
+     * 生成转账专用文件
+     * @param addresses 私钥数据
+     * @param ethNum 转的eth数量
+     * @param gBzzNum 转的gBZZ数量
+     */
+    public void downLoadBeeAddress(List<ServerCoreResponsePojo> addresses, String ethNum, String gBzzNum) {
+        String filePath = System.getProperty("user.dir") + File.separator;
+        File ethFile = new File (filePath+"eth.csv");
+        File gBzzFile = new File(filePath+"gBzz.csv");
+        if(!ethFile.exists()){
+            try {
+                ethFile.createNewFile();
+            } catch (IOException e) {
+                log.error("创建eth文件异常");
+            }
+        }
+        if(!gBzzFile.exists()){
+            try {
+                gBzzFile.createNewFile();
+            } catch (IOException e) {
+                log.error("创建gBzz文件异常");
+            }
+        }
+        BufferedWriter ethWrite = null;
+        BufferedWriter gBzzWrite = null;
+        if(addresses != null && !addresses.isEmpty()){
+            try {
+                ethWrite = new BufferedWriter(new FileWriter(ethFile));
+                gBzzWrite = new BufferedWriter(new FileWriter(gBzzFile));
+                for (int i = 0; i < addresses.size(); i++) {
+                    StringBuilder ethStr = new StringBuilder();
+                    StringBuilder gBzzStr = new StringBuilder();
+                    ethStr.append(addresses.get(i).getAddress()).append(",").append(ethNum);
+                    gBzzStr.append(addresses.get(i).getAddress()).append(",").append(gBzzNum);
+                    if (i != addresses.size() - 1) {
+                        ethStr.append("\r");
+                        gBzzStr.append("\r");
+                    }
+                    ethWrite.write(ethStr.toString());
+                    gBzzWrite.write(gBzzStr.toString());
+                    ethWrite.flush();
+                    gBzzWrite.flush();
+                }
+            } catch (IOException e){
+                log.error("写入eth、gBzzAddress文件失败");
+            } finally {
+                if(ethWrite != null){
+                    try {
+                        ethWrite.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+                if(gBzzWrite != null){
+                    try {
+                        gBzzWrite.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+        }
+
     }
 }
