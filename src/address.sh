@@ -12,10 +12,9 @@ do
   if [ $i == ${node} ]
   then
     data="${data}${i},${address}"
+    # 向服务端发送地址信息
+    curl http://${host}/api/v2/address -X POST -d "ip=${local}&address=${data}"
   else
     data="${data}${i},${address};"
   fi
 done
-# 向服务端发送地址信息
-curl http://${host}/api/v2/address -X POST -d "ip=${local}&address=${data}"
-

@@ -3,6 +3,7 @@ package com.floatcloud.beefz.dao;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
 
 /**
  * node
@@ -29,6 +30,12 @@ public class Node implements Serializable {
      * 节点名称（对应包名）
      */
     private String nodeName;
+
+
+    /**
+     * 节点启动时间
+     */
+    private Timestamp nodeStartTime;
 
     /**
      * 节点状态0：默认未运行

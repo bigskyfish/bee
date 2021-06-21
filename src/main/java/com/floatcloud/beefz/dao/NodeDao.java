@@ -18,7 +18,13 @@ public interface NodeDao {
 
     int updateByPrimaryKey(Node record);
 
+    int updateByIpAndIdSelective(Node record);
+
     int updateAddressByIpAndId(String ip, int id, String address);
+
+    int updateStatusByIpAndIds(String ip, List<String> ids);
+
+    int updateStatusByIp(String ip);
 
     List<Node> selectAll();
 }

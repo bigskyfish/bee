@@ -12,7 +12,11 @@ public interface ServerDao {
 
     List<Server> selectServersByStatus(int status);
 
+    List<Server> selectNeedConnectServers();
+
     List<Server> selectServersByIp(String ip);
+
+    List<Server> selectServersByIpList(List<String> ips);
 
     List<Server> selectServers();
 

@@ -23,6 +23,13 @@
     where id = #{id,jdbcType=INTEGER}
   </select>
 
+  <select id="selectNeedConnectServers" resultMap="BaseResultMap">
+    SELECT
+    <include refid="Base_Column_List" />
+    FROM server
+    WHERE EXISTS (SELECT DISTINCT(node_ip) AS node_ip FROM node WHERE node_status=0  AND server.ip = node.node_ip)
+  </select>
+
   <select id="selectServersByStatus" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select
     <include refid="Base_Column_List" />
@@ -44,6 +51,18 @@
     from server
     where ip = #{ip, jdbcType=VARCHAR}
   </select>
+
+  <select id="selectServersByIpList" parameterType="java.util.List" resultMap="BaseResultMap">
+    select
+    <include refid="Base_Column_List" />
+    from server
+    where ip in
+    <foreach collection="list" index="ips" item="ip" open="("
+             separator="," close=")">
+      #{ip}
+    </foreach>
+  </select>
+
 
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete from server

@@ -5,7 +5,6 @@ import com.floatcloud.beefz.dao.NodeDao;
 import com.floatcloud.beefz.dao.Server;
 import com.floatcloud.beefz.dao.ServerDao;
 import com.floatcloud.beefz.pojo.ServerConfigPojo;
-import com.floatcloud.beefz.pojo.ServerCoreResponsePojo;
 import com.floatcloud.beefz.util.SFTPHelper;
 import com.floatcloud.beefz.util.ServerTypeTransferUtil;
 import com.floatcloud.beefz.util.SshClientUtil;
@@ -26,6 +25,7 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -49,7 +49,7 @@ public class BeeService {
     @Value("${host}")
     private String localhost;
 
-    private final ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(16, 100, 5,
+    private final ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(16, 100, 30,
             TimeUnit.SECONDS, new ArrayBlockingQueue<>(500), new NamedThreadFactory("bee"));
 
     @Value("${beedata}")
@@ -60,6 +60,8 @@ public class BeeService {
      * 上传到服务器的地址
      */
     public static final String REMOTE_FOLDER = "/mnt/beeCli/";
+
+    public static final String SHELL = "chmod 777 /mnt/beeCli/connect.sh && sh /mnt/beeCli/connect.sh ";
 
     /**
      * 导入服务器信息
@@ -74,14 +76,27 @@ public class BeeService {
                     serverDao.insertSelective(server);
                 }
                 if(!poolExecutor.isShutdown()) {
-                    poolExecutor.execute(() -> {
-                        // 上传文件
-                        sendFileToRemote(server);
-                    });
+                    poolExecutor.execute(() -> sendFileToRemote(server));
                 }
             });
         }
     }
+
+    public void sendFiles(List<String> ips, String fileList){
+        if(ips != null && !ips.isEmpty()){
+            ips.forEach(ip -> {
+                List<Server> servers = serverDao.selectServersByIp(ip);
+                if(servers != null && servers.size() == 1) {
+                    ServerConfigPojo serverConfigPojo = ServerTypeTransferUtil.transferServerConfigPojo(servers.get(0));
+                    log.info(String.format("======执行文件发送：ip为%s ；文件为%s ======", serverConfigPojo.getIp(), fileList));
+                    if (!poolExecutor.isShutdown()) {
+                        poolExecutor.execute(() -> sendFileToRemote(serverConfigPojo, fileList));
+                    }
+                }
+            });
+        }
+    }
+
 
     public List<Server> getServers(Integer status){
         List<Server> servers;
@@ -103,8 +118,9 @@ public class BeeService {
             servers.forEach(server -> {
                 ServerConfigPojo serverConfigPojo = ServerTypeTransferUtil.transferServerConfigPojo(server);
                 if (!poolExecutor.isShutdown()) {
-                    poolExecutor.execute(() -> doExecShell2(serverConfigPojo, "chmod 777 /mnt/beeCli/address.sh && sh /mnt/beeCli/address.sh "
-                    + localhost + " " + serverConfigPojo.getIp() + " " + serverConfigPojo.getNodeNum()));
+                    poolExecutor.execute(() -> doExecShell2(serverConfigPojo, "nohup sh /mnt/beeCli/address.sh "
+                            + localhost + " " + serverConfigPojo.getIp() + " " + serverConfigPojo.getNodeNum()
+                            + " >/mnt/beeCli/address.log 2>&1 &"));
                 }
             });
 
@@ -112,17 +128,51 @@ public class BeeService {
     }
 
 
+    public void listenBeeStatus(){
+        List<Server> servers = getServers(1);
+        if(servers != null && !servers.isEmpty()) {
+            servers.forEach(server -> {
+                ServerConfigPojo serverConfigPojo = ServerTypeTransferUtil.transferServerConfigPojo(server);
+                log.info("=====**监控执行**的服务器信息：=====" + serverConfigPojo.toString());
+                if (!poolExecutor.isShutdown()) {
+                    poolExecutor.execute(() -> doExecShell2(serverConfigPojo, "nohup sh /mnt/beeCli/listenBee.sh "
+                            + localhost + " " + serverConfigPojo.getIp() + " " + serverConfigPojo.getNodeNum()
+                            + " >/mnt/beeCli/listenBee.log 2>&1 &"));
+                }
+            });
+        }
+    }
 
-    /**
-     * 上传文件到服务器，并且完成其基础程序的初始化
-     * @param server
-     */
-    public void sendFileToRemote(Server server){
-        ServerConfigPojo serverConfigPojo = ServerTypeTransferUtil.transferServerConfigPojo(server);
-        String[] split = fileNameStr.split(",");
+
+    public void connectBootNode(List<String> ipList){
+        List<Server> servers;
+        if (ipList != null && !ipList.isEmpty()){
+            log.info("====手动引导连接开始=====");
+            servers = serverDao.selectServersByIpList(ipList);
+        } else {
+            log.info("====自动引导连接开始=====");
+            servers = serverDao.selectNeedConnectServers();
+        }
+        if(servers != null && !servers.isEmpty()){
+            log.info("=====进入引导逻辑=====");
+            servers.forEach(server -> {
+                ServerConfigPojo configPojo = ServerTypeTransferUtil.transferServerConfigPojo(server);
+                log.info("====引导的服务器信息：===" + configPojo.toString());
+                doExecShell2(configPojo, SHELL + configPojo.getNodeNum());
+                int status = nodeDao.updateStatusByIp(configPojo.getIp());
+                log.info("====脚本执行成功，且修改状态是否成功：===" + status);
+            });
+        } else {
+            log.info("========暂无需要连接引导的服务器信息======");
+        }
+    }
+
+
+    public void sendFileToRemote(ServerConfigPojo serverConfigPojo, String fileList){
+        String[] split = fileList.split(",");
         List<String> filenames = Stream.of(split).collect(Collectors.toList());
         String srcPath = System.getProperty("user.dir") + File.separator +"src" + File.separator;
-        SFTPHelper sftpHelper = null;
+        SFTPHelper sftpHelper;
         ChannelSftp channelSftp = null;
         try {
             sftpHelper = new SFTPHelper(serverConfigPojo);
@@ -153,14 +203,23 @@ public class BeeService {
                 sftpException.printStackTrace();
             }
         });
+    }
+
+    /**
+     * 上传文件到服务器，并且完成其基础程序的初始化
+     * @param server 服务器信息
+     */
+    public void sendFileToRemote(Server server){
+        ServerConfigPojo serverConfigPojo = ServerTypeTransferUtil.transferServerConfigPojo(server);
+        sendFileToRemote(serverConfigPojo, fileNameStr);
         // 执行 基础程序下载安装脚本
+        log.info("====执行基础程序安装====" + server.getIp());
         if(!poolExecutor.isShutdown()) {
-            poolExecutor.execute(() -> {
-                doExecShell2(serverConfigPojo, "chmod 777 /mnt/beeCli/install.sh && nohup sh /mnt/beeCli/install.sh /dev/null &");
-            });
+            poolExecutor.execute(() -> doExecShell2(serverConfigPojo,
+                    "chmod 777 /mnt/beeCli/install.sh && nohup sh /mnt/beeCli/install.sh /dev/null &"));
         }
         // 更新服务器信息状态
-        serverDao.updateStatus(serverConfigPojo.getIp(), 1);
+        // serverDao.updateStatus(serverConfigPojo.getIp(), 1);
     }
 
 
@@ -178,6 +237,7 @@ public class BeeService {
                     String psd = serverConfigPojo.getPassword();
                     String endPoint = serverConfigPojo.getEndPoint();
                     String ip = serverConfigPojo.getIp();
+                    log.info("===服务器信息为===" + serverConfigPojo.toString());
                     if(!poolExecutor.isShutdown()) {
                         poolExecutor.execute(() -> {
                             try {
@@ -197,6 +257,7 @@ public class BeeService {
                             }
                         });
                     }
+                    serverDao.updateStatus(serverConfigPojo.getIp(), 1);
                 } catch (Exception e) {
                     log.error("====FileDistributeUtil 上传 error====", e);
                 }
@@ -229,11 +290,13 @@ public class BeeService {
 
     public void doExecShell2(ServerConfigPojo serverConfigPojo, String sh) {
         SshClientUtil sshClientUtil = new SshClientUtil();
+        log.info("===执行脚本内容为：" + sh);
         sshClientUtil.exec(serverConfigPojo, sh);
     }
 
 
     public void updateBeeNode(String ip, String addressStr){
+        log.info("=======地址值为：=====" + addressStr);
         if(addressStr != null && !addressStr.isEmpty()){
             String[] stirs = addressStr.split(";");
             if(stirs.length != 0){
@@ -241,10 +304,11 @@ public class BeeService {
                    if(str != null && !str.isEmpty()){
                        String[] split = str.split(",");
                        int id = Integer.parseInt(split[0]);
-                       if(id != 0) {
+                       if(id != 0 && split.length > 1 && !split[1].isEmpty()) {
                            String address = split[1].endsWith("\"")?split[1].substring(1, split[1].length()-1):split[1];
                            nodeDao.updateAddressByIpAndId(ip, id, address);
                        } else {
+                           log.info("======错误地址信息：=====" + str);
                            log.error("==============获取地址出错===========");
                        }
                    }
@@ -254,18 +318,15 @@ public class BeeService {
     }
 
 
-    public List<ServerCoreResponsePojo> getAddress(){
-        List<ServerCoreResponsePojo> response = new ArrayList<>();
+    public List<Node> getAddress(){
         List<Node> nodes = nodeDao.selectAll();
         if(nodes != null && !nodes.isEmpty()){
             nodes.forEach(node -> {
-                ServerCoreResponsePojo serverCoreResponsePojo = new ServerCoreResponsePojo.Builder()
-                        .withIp(node.getNodeIp()).withNodeName(node.getNodeName())
-                        .withAddress(node.getNodeAddress()).build();
-                response.add(serverCoreResponsePojo);
+                node.setNodePrivateKey("******");
+                node.setNodeDetail("******");
             });
         }
-        return response;
+        return nodes;
     }
 
 
@@ -275,7 +336,7 @@ public class BeeService {
      * @param ethNum 转的eth数量
      * @param gBzzNum 转的gBZZ数量
      */
-    public void downLoadBeeAddress(List<ServerCoreResponsePojo> addresses, String ethNum, String gBzzNum) {
+    public void downLoadBeeAddress(List<Node> addresses, String ethNum, String gBzzNum) {
         String filePath = System.getProperty("user.dir") + File.separator;
         File ethFile = new File (filePath+"eth.csv");
         File gBzzFile = new File(filePath+"gBzz.csv");
@@ -302,11 +363,11 @@ public class BeeService {
                 for (int i = 0; i < addresses.size(); i++) {
                     StringBuilder ethStr = new StringBuilder();
                     StringBuilder gBzzStr = new StringBuilder();
-                    ethStr.append(addresses.get(i).getAddress()).append(",").append(ethNum);
-                    gBzzStr.append(addresses.get(i).getAddress()).append(",").append(gBzzNum);
+                    ethStr.append(addresses.get(i).getNodeAddress()).append(",").append(ethNum);
+                    gBzzStr.append(addresses.get(i).getNodeAddress()).append(",").append(gBzzNum);
                     if (i != addresses.size() - 1) {
-                        ethStr.append("\r");
-                        gBzzStr.append("\r");
+                        ethStr.append("\n");
+                        gBzzStr.append("\n");
                     }
                     ethWrite.write(ethStr.toString());
                     gBzzWrite.write(gBzzStr.toString());
@@ -335,5 +396,35 @@ public class BeeService {
             }
         }
 
+    }
+
+
+    public void updateBeeStatus(String ip, String stop, String running) {
+        log.info(String.format("==ip: %s==;==stop: %s==;==running: %s==", ip, stop, running));
+        if(ip != null && !ip.isEmpty()){
+            if (stop != null && !stop.isEmpty()){
+                ArrayList<String> arrayList = new ArrayList<>(Arrays.asList(stop.split(",")));
+                log.info("====停止的bee服务，修改状态===");
+                int num = nodeDao.updateStatusByIpAndIds(ip, arrayList);
+                log.info("====停止的bee服务，修改状态成功，条数：===" + num);
+            }
+            Node node = new Node();
+            if (running != null && !running.isEmpty()){
+                String[] split = running.split(";");
+                if( split.length > 0){
+                    for (String info: split) {
+                        String[] msg = info.split(",");
+                        if(msg.length == 2){
+                            node.setNodeId(Integer.parseInt(msg[0]));
+                            node.setNodeIp(ip);
+                            node.setNodeTicketNum(Integer.parseInt(msg[1]));
+                            node.setNodeStatus(1);
+                            int num = nodeDao.updateByIpAndIdSelective(node);
+                            log.info("====启动的bee服务，修改状态成功，条数：===" + num);
+                        }
+                    }
+                }
+            }
+        }
     }
 }

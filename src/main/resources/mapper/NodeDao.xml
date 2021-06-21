@@ -6,6 +6,7 @@
     <result column="node_ip" jdbcType="VARCHAR" property="nodeIp" />
     <result column="node_id" jdbcType="INTEGER" property="nodeId" />
     <result column="node_name" jdbcType="VARCHAR" property="nodeName" />
+    <result column="node_start_time" jdbcType="TIMESTAMP" property="nodeStartTime" />
     <result column="node_status" jdbcType="INTEGER" property="nodeStatus" />
     <result column="node_address" jdbcType="VARCHAR" property="nodeAddress" />
     <result column="node_private_key" jdbcType="VARCHAR" property="nodePrivateKey" />
@@ -13,7 +14,7 @@
     <result column="node_detail" jdbcType="VARCHAR" property="nodeDetail" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, node_ip, node_id, node_name, node_status, node_address, node_private_key, node_ticket_num, 
+    id, node_ip, node_id, node_name, node_start_time, node_status, node_address, node_private_key, node_ticket_num,
     node_detail
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
@@ -23,8 +24,9 @@
     where id = #{id,jdbcType=INTEGER}
   </select>
   <select id="selectAll" parameterType="java.lang.Integer" resultMap="BaseResultMap">
-    select <include refid="Base_Column_List" />
-    from node order by node_id group by node_ip
+    select
+    <include refid="Base_Column_List" />
+    from node
   </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete from node
@@ -123,6 +125,42 @@
     </set>
     where id = #{id,jdbcType=INTEGER}
   </update>
+
+  <update id="updateByIpAndIdSelective" parameterType="com.floatcloud.beefz.dao.Node">
+    update node
+    <set>
+      <if test="nodeStatus != null">
+        node_status = #{nodeStatus,jdbcType=INTEGER},
+      </if>
+      <if test="nodeStartTime != null">
+        node_start_time = #{nodeStartTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="nodeAddress != null">
+        node_address = #{nodeAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="nodePrivateKey != null">
+        node_private_key = #{nodePrivateKey,jdbcType=VARCHAR},
+      </if>
+      <if test="nodeTicketNum != null">
+        node_ticket_num = #{nodeTicketNum,jdbcType=INTEGER},
+      </if>
+      <if test="nodeDetail != null">
+        node_detail = #{nodeDetail,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where node_ip = #{nodeIp,jdbcType=VARCHAR} AND node_id = #{nodeId,jdbcType=INTEGER}
+  </update>
+
+  <update id="updateStatusByIpAndIds" >
+    update node
+    set node_status=-1
+    where node_ip = #{ip,jdbcType=VARCHAR} AND node_id in
+    <foreach collection="list" index="ids" item="id" open="(" separator="," close=")">
+      #{id}
+    </foreach>
+  </update>
+
+
   <update id="updateByPrimaryKey" parameterType="com.floatcloud.beefz.dao.Node">
     update node
     set node_ip = #{nodeIp,jdbcType=VARCHAR},
@@ -136,11 +174,15 @@
     where id = #{id,jdbcType=INTEGER}
   </update>
 
-  <update id="updateAddressByIpAndId" >
+  <update id="updateStatusByIp" >
+    update node
+    set node_status=1
+    where node_address is not null and node_ip=#{ip, jdbcType=VARCHAR}
+  </update>
+
+  <update id="updateAddressByIpAndId" parameterType="java.lang.String" >
     update node
     set node_address=#{address, jdbcType=VARCHAR}
     where node_address is null and node_ip=#{ip, jdbcType=VARCHAR} and node_id=#{id, jdbcType=INTEGER}
   </update>
-
-
 </mapper>
