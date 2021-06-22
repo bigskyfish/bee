@@ -6,7 +6,7 @@
     <result column="node_ip" jdbcType="VARCHAR" property="nodeIp" />
     <result column="node_id" jdbcType="INTEGER" property="nodeId" />
     <result column="node_name" jdbcType="VARCHAR" property="nodeName" />
-    <result column="node_start_time" jdbcType="TIMESTAMP" property="nodeStartTime" />
+    <result column="s" jdbcType="TIMESTAMP" property="nodeStartTime" />
     <result column="node_status" jdbcType="INTEGER" property="nodeStatus" />
     <result column="node_address" jdbcType="VARCHAR" property="nodeAddress" />
     <result column="node_private_key" jdbcType="VARCHAR" property="nodePrivateKey" />
@@ -27,6 +27,7 @@
     select
     <include refid="Base_Column_List" />
     from node
+    order by node_status,node_ip,node_id
   </select>
   <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
     delete from node
@@ -160,6 +161,12 @@
     </foreach>
   </update>
 
+  <update id="updateStatusByIpAndId" >
+    update node
+    set node_status=-1
+    where node_ip = #{ip,jdbcType=VARCHAR} AND node_id = #{id,jdbcType=INTEGER}
+  </update>
+
 
   <update id="updateByPrimaryKey" parameterType="com.floatcloud.beefz.dao.Node">
     update node
@@ -180,7 +187,7 @@
     where node_address is not null and node_ip=#{ip, jdbcType=VARCHAR}
   </update>
 
-  <update id="updateAddressByIpAndId" parameterType="java.lang.String" >
+  <update id="updateAddressByIpAndId" >
     update node
     set node_address=#{address, jdbcType=VARCHAR}
     where node_address is null and node_ip=#{ip, jdbcType=VARCHAR} and node_id=#{id, jdbcType=INTEGER}

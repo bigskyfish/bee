@@ -20,9 +20,11 @@ public interface NodeDao {
 
     int updateByIpAndIdSelective(Node record);
 
-    int updateAddressByIpAndId(String ip, int id, String address);
+    int updateAddressByIpAndId(String ip, Integer id, String address);
 
-    int updateStatusByIpAndIds(String ip, List<String> ids);
+    int updateStatusByIpAndIds(String ip, List<Integer> ids);
+
+    int updateStatusByIpAndId(String ip, Integer id);
 
     int updateStatusByIp(String ip);
 

@@ -22,7 +22,7 @@ do
   if [[ ${i} == ${nodeNum} ]];
   then
     echo "${beeStop}===${success}"
-    curl http://${host}/api/v2/update/bee/status -X POST -d "ip=${local}&stop=${beeStop}&running=${success}"
+    curl http://${host}/v2/api/update/bee/status -X POST -d "ip=${local}&stop=${beeStop}&running=${success}"
   else
     beeStop="${beeStop},"
     success="${success};"

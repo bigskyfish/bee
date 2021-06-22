@@ -23,7 +23,7 @@ CREATE TABLE `server` (
   `memory` varchar(20) DEFAULT NULL COMMENT '存储',
   `band_width` varchar(20) DEFAULT NULL COMMENT '带宽',
   `detail` varchar(200) DEFAULT NULL COMMENT '其他描述信息',
-  `status` int(11) DEFAULT -1 COMMENT '服务器联通情况（检查网络）\n-1: 未安装\n0：未连通（ping不同）\n1：已连通',
+  `status` int(3) DEFAULT -1 COMMENT '服务器联通情况（检查网络）\n-1: 未安装\n0：未连通（ping不同）\n1：已连通',
   PRIMARY KEY (`id`),
   UNIQUE KEY `server_ip_uindex` (`ip`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='数据库信息';

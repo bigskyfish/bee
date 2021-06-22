@@ -12,11 +12,15 @@
         <th>服务器IP</th>
         <th>节点名称</th>
         <th>Bee地址</th>
+        <th>服务状况</th>
+        <th>出票数</th>
     </tr>
     <tr th:each="server:${servers}">
-        <td th:text="${server.ip}"></td>
+        <td th:text="${server.nodeIp}"></td>
         <td th:text="${server.nodeName}"></td>
-        <td th:text="${server.address}"></td>
+        <td th:text="${server.nodeAddress}"></td>
+        <td th:text="${server.nodeStatus} eq 1 ? '正常':'异常'"></td>
+        <td th:text="${server.nodeTicketNum}"></td>
     </tr>
 </table>
 </body>

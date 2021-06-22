@@ -6,7 +6,10 @@ import ch.ethz.ssh2.Session;
 import com.floatcloud.beefz.pojo.ServerConfigPojo;
 import lombok.Data;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 
 /**
@@ -55,9 +58,48 @@ public class SshClientUtil {
         return ret;
     }
 
+    public String execForBack(ServerConfigPojo serverConfigPojo, String shell) {
+        StringBuffer stringBuffer = new StringBuffer();
+        try {
+            if (login(serverConfigPojo)) {
+                Session session = conn.openSession();
+                session.execCommand(shell , "UTF-8" );
+                session.waitForCondition(ChannelCondition.EXIT_STATUS, TIME_OUT);
+                InputStream stdout = session.getStdout();
+                BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(stdout));
+                String line;
+                while((line = bufferedReader.readLine()) != null){
+                    stringBuffer.append(line).append("\n");
+                }
+            } else {
+                // 自定义异常类 实现略
+                throw new RuntimeException("登录远程机器失败" + serverConfigPojo.getIp());
+            }
+        } catch (IOException e){
+            e.printStackTrace();
+        } finally {
+            if (conn != null) {
+                conn.close();
+            }
+        }
+        return stringBuffer.toString();
+    }
+
 
     public static void main(String[] args) {
-        String shell = "cd /mnt/bee && bee start --config bee-config.yaml";
-        //SshClientUtil.exec(new ServerConfigPojo("47.98.53.84", "root", "9ol.0p;/", 22), shell);
+        String shell = "docker --version";
+        SshClientUtil sshClientUtil = new SshClientUtil();
+        ServerConfigPojo  serverConfigPojo1 = new ServerConfigPojo();
+        ServerConfigPojo  serverConfigPojo2 = new ServerConfigPojo();
+        serverConfigPojo1.setUser("root");
+        serverConfigPojo1.setPassword("Szgy1314@");
+        serverConfigPojo1.setPort(22);
+        serverConfigPojo1.setIp("36.137.173.34");
+        serverConfigPojo2.setUser("root");
+        serverConfigPojo2.setPassword("Szgy1314@");
+        serverConfigPojo2.setPort(22);
+        serverConfigPojo2.setIp("36.137.171.40");
+        System.out.println("==="+sshClientUtil.execForBack(serverConfigPojo1, shell));
+        System.out.println("==="+sshClientUtil.execForBack(serverConfigPojo2, shell));
     }
 }

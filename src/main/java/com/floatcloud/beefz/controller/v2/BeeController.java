@@ -24,7 +24,7 @@ import javax.annotation.Resource;
  * @author aiyuner
  */
 @RestController
-@RequestMapping("/api/v2")
+@RequestMapping("/v2/api")
 @Slf4j
 public class BeeController {
 
@@ -44,14 +44,18 @@ public class BeeController {
     }
 
     @GetMapping("/send/files")
-    public void sendFileToRemote(@RequestParam String ips,
+    public void sendFileToRemote(@RequestParam(required = false) String ips,
                                  @RequestParam String files){
+        List<String> ipList = new ArrayList<>();
         if(ips != null && !ips.isEmpty()){
             String[] split = ips.split(",");
-            List<String> ipList = new ArrayList<>(Arrays.asList(split));
-            beeService.sendFiles(ipList, files);
+            ipList = new ArrayList<>(Arrays.asList(split));
+        } else {
+            List<Server> servers = beeService.getServers(null);
+            List<String> finalIpList = ipList;
+            servers.forEach(server -> finalIpList.add(server.getIp()));
         }
-
+        beeService.sendFiles(ipList, files);
     }
 
     @GetMapping("/servers")
@@ -77,14 +81,18 @@ public class BeeController {
 
 
     @GetMapping("/bee/connect")
-    public List<Node> beeConnect(@RequestParam String ips) {
+    public List<Node> beeConnect(@RequestParam(required = false) String ips) {
+        List<String> ipList = new ArrayList<>();
         if(ips != null && !ips.isEmpty()){
             String[] split = ips.split(",");
-            List<String> ipList = new ArrayList<>(Arrays.asList(split));
-            beeService.connectBootNode(ipList);
-            return beeService.getAddress();
+            ipList = new ArrayList<>(Arrays.asList(split));
+        } else {
+            List<Server> servers = beeService.getServers(null);
+            List<String> finalIpList = ipList;
+            servers.forEach(server -> finalIpList.add(server.getIp()));
         }
-        return new ArrayList<>();
+        beeService.connectBootNode(ipList);
+        return beeService.getAddress();
     }
 
 
@@ -123,5 +131,21 @@ public class BeeController {
         beeService.updateBeeStatus(ip, stop, running);
     }
 
+
+
+    @GetMapping("/error/server")
+    public List<String> errorServer() throws InterruptedException {
+        return beeService.getErrorServers();
+    }
+
+    /**
+     * 所有节点执行shell
+     * @param sh
+     * @return
+     */
+    @GetMapping("/shell")
+    public void shell(@RequestParam String sh) {
+        beeService.shellAllNode(sh);
+    }
 
 }

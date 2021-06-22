@@ -15,7 +15,7 @@
     <result column="detail" jdbcType="VARCHAR" property="detail" />
     <result column="status" jdbcType="INTEGER" property="status" />
   </resultMap>
-  <sql id="Base_Column_List">id, ip, `user`, psd, port, endpoint, node_num, cpu_num, memory, band_width, detail, `status`</sql>
+  <sql id="Base_Column_List"> id, ip, user, psd, port, endpoint, node_num, cpu_num, memory, band_width, detail, status </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
     <include refid="Base_Column_List" />
@@ -34,7 +34,7 @@
     select
     <include refid="Base_Column_List" />
     from server
-    where status = #{status,jdbcType=INTEGER}
+    where status=#{status,jdbcType=INTEGER}
   </select>
 
   <select id="selectServers" resultMap="BaseResultMap">
@@ -49,7 +49,7 @@
     select
     <include refid="Base_Column_List" />
     from server
-    where ip = #{ip, jdbcType=VARCHAR}
+    where ip = #{ip,jdbcType=VARCHAR}
   </select>
 
   <select id="selectServersByIpList" parameterType="java.util.List" resultMap="BaseResultMap">
@@ -207,7 +207,7 @@
   </update>
 
   <update id="updateStatus" >
-    update server set status = #{status, jdbcType=INTEGER} where ip = #{ip, jdbcType=VARCHAR}
+    update server set status = #{status,jdbcType=INTEGER} where ip = #{ip,jdbcType=VARCHAR}
   </update>
 
 </mapper>

@@ -10,7 +10,7 @@ public interface ServerDao {
 
     int insert(Server record);
 
-    List<Server> selectServersByStatus(int status);
+    List<Server> selectServersByStatus(Integer status);
 
     List<Server> selectNeedConnectServers();
 
