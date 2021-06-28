@@ -13,7 +13,7 @@ do
   port3=`expr 100 + ${i}`35
   name=bee${i}
   mkdir -p /mnt/${name}/data
-  sudo docker run -d --privileged=true -p ${port3}:1635 -p ${port2}:1634 -p ${port1}:1633 --name ${name} -it ${imageVersion} start --welcome-message="Bzzzz bzzz ${name}" --password="${psd}" --swap-endpoint ${swapPoint} --debug-api-enable
-  echo "${name}容器创建成功!" 
+  sudo docker run -d --privileged=true -p ${port3}:1635 -p ${port2}:1634 -p ${port1}:1633 --name ${name} -it ${imageVersion} start --welcome-message="Bzzzz bzzz ${name}"  --network-id 1 --mainnet=true --swap-initial-deposit="0" --db-open-files-limit 1000 --full-node=true --password="${psd}" --swap-endpoint ${swapPoint} --debug-api-enable
+  echo "${name}容器创建成功!"
 done
 

@@ -5,9 +5,16 @@ local=$2
 node=$3
 for((i=1;i<=${node};i++))
 do
+  docker cp bee${i}:/home/bee/.bee /mnt/bee${i}/data/
   port=`expr 100 + $i`35
   address=$(curl -s http://localhost:$port/addresses | jq '.ethereum')
   # address2=$(curl -s http://localhost:$port/chequebook/address)
+  if [[ ! -n ${address} ]]
+  then
+    address=$(cat /mnt/bee${i}/data/keys/swarm.key | jq ".address")
+    address=0x${address}
+  fi
+  echo ${address}
   sleep 1
   if [ $i == ${node} ]
   then

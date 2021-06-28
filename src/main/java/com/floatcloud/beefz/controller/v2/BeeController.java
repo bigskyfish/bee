@@ -72,7 +72,7 @@ public class BeeController {
     }
 
     @GetMapping("/bee/setup")
-    public String beeSetup(@RequestParam(defaultValue = "ethersphere/bee:0.6.2") String version) {
+    public String beeSetup(@RequestParam(defaultValue = "ethersphere/bee") String version) {
         List<Server> servers = beeService.getServers(-1);
         log.info("=====查询的服务器信息数量为===" + servers.size());
         beeService.beeSetup(servers, version);
@@ -132,11 +132,23 @@ public class BeeController {
     }
 
 
+    @PostMapping("/update/server/status")
+    public void updateServerStatus(@RequestParam String ip,
+                                   @RequestParam String cpu,
+                                   @RequestParam String memory,
+                                   @RequestParam String disk,
+                                   @RequestParam String bandWidth){
+        beeService.updateServerStatus(ip, cpu, memory, disk, bandWidth);
+    }
+
+
+
 
     @GetMapping("/error/server")
     public List<String> errorServer() throws InterruptedException {
         return beeService.getErrorServers();
     }
+
 
     /**
      * 所有节点执行shell
@@ -147,5 +159,8 @@ public class BeeController {
     public void shell(@RequestParam String sh) {
         beeService.shellAllNode(sh);
     }
+
+
+
 
 }

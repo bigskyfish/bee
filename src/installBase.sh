@@ -1,14 +1,18 @@
 yum install -y wget
-# 1. 下载docker-ce的repo
-curl https://download.docker.com/linux/centos/docker-ce.repo -o /etc/yum.repos.d/docker-ce.repo
-# 2. 安装依赖
-yum install -y https://download.docker.com/linux/fedora/30/x86_64/stable/Packages/containerd.io-1.2.6-3.3.fc30.x86_64.rpm
-# 3. 安装docker-ce
-yum -y  install docker-ce  docker-ce-cli --nobest
-# 4.启动 docker
-systemctl start docker
-# 5.设置开机自动启动
-systemctl enable --now docker
+installOrNot=${docker version}
+if [[ ! -n ${installOrNot} ]]
+then
+  # 1. 下载docker-ce的repo
+  curl https://download.docker.com/linux/centos/docker-ce.repo -o /etc/yum.repos.d/docker-ce.repo
+  # 2. 安装依赖
+  yum install -y https://download.docker.com/linux/fedora/30/x86_64/stable/Packages/containerd.io-1.2.6-3.3.fc30.x86_64.rpm
+  # 3. 安装docker-ce
+  yum -y  install docker-ce  docker-ce-cli --nobest
+  # 4.启动 docker
+  systemctl start docker
+  # 5.设置开机自动启动
+  systemctl enable --now docker
+fi
 cd /mnt/
 mkdir beeCli
 cd beeCli/

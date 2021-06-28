@@ -354,6 +354,7 @@ public class BeeService {
                        int id = Integer.parseInt(split[0]);
                        if(id != 0 && split.length > 1 && !split[1].isEmpty()) {
                            String address = split[1].endsWith("\"")?split[1].substring(1, split[1].length()-1):split[1];
+                           address = "0x" + address;
                            nodeDao.updateAddressByIpAndId(ip, id, address);
                        } else {
                            log.info("======错误地址信息：=====" + str);
@@ -480,6 +481,15 @@ public class BeeService {
                     }
                 }
             }
+        }
+    }
+
+
+
+    public void updateServerStatus(String ip, String cpu, String memory, String disk, String bandWidth) {
+        log.info(String.format("==ip: %s==;==cpu: %s==;==memory: %s==;==disk: %s==;==bandWidth: %s==", ip, cpu, memory, disk, bandWidth));
+        if(ip != null && !ip.isEmpty()){
+            // TODO 修改监控数据
         }
     }
 }

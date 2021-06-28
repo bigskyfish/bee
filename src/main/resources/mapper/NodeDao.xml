@@ -190,6 +190,6 @@
   <update id="updateAddressByIpAndId" >
     update node
     set node_address=#{address, jdbcType=VARCHAR}
-    where node_address is null and node_ip=#{ip, jdbcType=VARCHAR} and node_id=#{id, jdbcType=INTEGER}
+    where node_ip=#{ip, jdbcType=VARCHAR} and node_id=#{id, jdbcType=INTEGER}
   </update>
 </mapper>
