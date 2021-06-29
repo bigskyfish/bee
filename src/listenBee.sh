@@ -19,6 +19,8 @@ IDLE=`echo "$IDLE2-$IDLE1" | bc`
 CPU_TOTAL=`echo "$CPU2_TOTAL-$CPU1_TOTAL" | bc`
 cpuRate=`echo "scale=4;($CPU_TOTAL-$IDLE)/$CPU_TOTAL*100" | bc | awk '{printf "%.2f",$1}'`
 
+echo "cpu使用："${cpuRate}
+
 # 内存数据
 total=$(free -m | sed -n '2p' | awk '{print $2}')
 used=$(free -m | sed -n '2p' | awk '{print $3}')
@@ -26,10 +28,15 @@ free=$(free -m | sed -n '2p' | awk '{print $4}')
 shared=$(free -m | sed -n '2p' | awk '{print $5}')
 buff=$(free -m | sed -n '2p' | awk '{print $6}')
 cached=$(free -m | sed -n '2p' | awk '{print $7}')
+memoryTotal=${total}
 memoryRate=`echo "scale=2;$used/$total" | bc | awk -F. '{print $2}'`
+
+echo "内存使用："${memoryRate}
+echo "内存大小："${memoryTotal}
 
 # 磁盘
 diskRate=0
+allDisk=0
 DEV=`df -hP | grep '^/dev/*' | cut -d' ' -f1 | sort`
 for I in $DEV
 do
@@ -39,14 +46,16 @@ used=`df -Ph | grep $I | awk '{print $3}'`
 free=`df -Ph | grep $I | awk '{print $4}'`
 rate=`df -Ph | grep $I | awk '{print $5}'`
 mount=`df -Ph | grep $I | awk '{print $6}'`
-diskRate=$rate
+diskRate=${rate}
+allDisk=${size}
 done
-echo $diskRate
+echo "磁盘使用："${diskRate}
+echo "磁盘总大小："${allDisk}
 
 # 带宽
 bandWidth=0
 
-curl http://${host}/v2/api/update/server/status -X POST -d "ip=${local}&cpu=${cpuRate}&memory=${memoryRate}&disk=${diskRate}&bandWidth=${bandWidth}"
+curl http://${host}/v2/api/update/server/status -X POST -d "ip=${local}&cpu=${cpuRate}&memoryTotal=${memoryTotal}&memory=${memoryRate}&allDisk=${allDisk}&disk=${diskRate}&bandWidth=${bandWidth}"
 
 for i in `seq 1 ${nodeNum}`
 do
@@ -59,10 +68,10 @@ do
     echo "${now} : 节点 bee${i} 处于下线状态。" >> /mnt/beeCli/beeStop.log
     beeStop="${beeStop}${i}"
   else
-    cheque=$(curl -s http://localhost:${port2}/chequebook/cheque | jq '.peers | length')
-    if [[ -n ${cheque} ]];
+    peers=$(curl -s http://localhost:${port2}/peers | jq '.peers | length')
+    if [[ -n ${peers} ]];
     then
-      success="${success}${i},${cheque}"
+      success="${success}${i},${peers}"
     fi
   fi
   # shellcheck disable=SC2053

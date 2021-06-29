@@ -135,10 +135,12 @@ public class BeeController {
     @PostMapping("/update/server/status")
     public void updateServerStatus(@RequestParam String ip,
                                    @RequestParam String cpu,
+                                   @RequestParam String memoryTotal,
                                    @RequestParam String memory,
+                                   @RequestParam String allDisk,
                                    @RequestParam String disk,
                                    @RequestParam String bandWidth){
-        beeService.updateServerStatus(ip, cpu, memory, disk, bandWidth);
+        beeService.updateServerStatus(ip, cpu, memoryTotal, memory, memoryTotal, disk, bandWidth);
     }
 
 

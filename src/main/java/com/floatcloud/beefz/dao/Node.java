@@ -52,6 +52,12 @@ public class Node implements Serializable {
      */
     private String nodePrivateKey;
 
+    private Integer connectPeers;
+
+    private String bzzNum;
+
+    private Integer runMinute;
+
     /**
      * 出票情况
      */

@@ -1,5 +1,5 @@
 -- 创建数据库
-create database bee if not exists bee
+create database bee
 default character set utf8
 default collate utf8_general_ci;
 -- 进入bee
@@ -51,6 +51,20 @@ CREATE TABLE `node` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='节点';
 -- 设置主键自增
 ALTER TABLE `node` MODIFY id INTEGER auto_increment;
+
+
+-- V2.0 监控指标增加
+ALTER TABLE `bee`.`server`
+ADD COLUMN `run_time` datetime(0) NULL COMMENT '服务器开始运行的起始时间' AFTER `endpoint`,
+ADD COLUMN `cpu_used` varchar(10) NULL COMMENT 'cpu使用率' AFTER `band_width`,
+ADD COLUMN `memory_used` varchar(10) NULL COMMENT '内存使用率' AFTER `cpu_used`,
+ADD COLUMN `all_disk` varchar(20) NULL COMMENT '磁盘大小' AFTER `memory_used`,
+ADD COLUMN `disk_used` varchar(255) NULL COMMENT '磁盘使用率' AFTER `all_disk`;
+
+ALTER TABLE `bee`.`node`
+ADD COLUMN `connect_peers` int(10) NULL AFTER `node_private_key`,
+ADD COLUMN `bzz_num` varchar(50) NULL AFTER `connect_peers`,
+ADD COLUMN `run_minute` int(10) DEFAULT 0  AFTER `bzz_num`;
 
 
 SET FOREIGN_KEY_CHECKS = 1;

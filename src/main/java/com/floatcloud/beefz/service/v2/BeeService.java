@@ -473,8 +473,9 @@ public class BeeService {
                         if(msg.length == 2){
                             node.setNodeId(Integer.parseInt(msg[0]));
                             node.setNodeIp(ip);
-                            node.setNodeTicketNum(Integer.parseInt(msg[1]));
+                            node.setConnectPeers(Integer.parseInt(msg[1]));
                             node.setNodeStatus(1);
+                            node.setRunMinute(5);
                             int num = nodeDao.updateByIpAndIdSelective(node);
                             log.info("====启动的bee服务，修改状态成功，条数：===" + num);
                         }
@@ -486,10 +487,20 @@ public class BeeService {
 
 
 
-    public void updateServerStatus(String ip, String cpu, String memory, String disk, String bandWidth) {
-        log.info(String.format("==ip: %s==;==cpu: %s==;==memory: %s==;==disk: %s==;==bandWidth: %s==", ip, cpu, memory, disk, bandWidth));
+    public void updateServerStatus(String ip, String cpu,String memory, String memoryUsed, String disk, String diskUsed, String bandWidth) {
+        log.info(String.format("==ip: %s==;==cpu: %s==;==memory: %s==;==disk: %s==;==bandWidth: %s==", ip, cpu, memoryUsed, diskUsed, bandWidth));
         if(ip != null && !ip.isEmpty()){
             // TODO 修改监控数据
+            Server server = new Server();
+            server.setIp(ip);
+            server.setCpuUsed(cpu);
+            server.setMemory(memory);
+            server.setMemoryUsed(memoryUsed);
+            server.setAllDisk(disk);
+            server.setDiskUsed(diskUsed);
+            server.setBandWidth(bandWidth);
+            log.info("===修改数据库的Server===：" + server.toString());
+            serverDao.updateByIpSelective(server);
         }
     }
 }

@@ -6,16 +6,19 @@
     <result column="node_ip" jdbcType="VARCHAR" property="nodeIp" />
     <result column="node_id" jdbcType="INTEGER" property="nodeId" />
     <result column="node_name" jdbcType="VARCHAR" property="nodeName" />
-    <result column="s" jdbcType="TIMESTAMP" property="nodeStartTime" />
+    <result column="node_start_time" jdbcType="TIMESTAMP" property="nodeStartTime" />
     <result column="node_status" jdbcType="INTEGER" property="nodeStatus" />
     <result column="node_address" jdbcType="VARCHAR" property="nodeAddress" />
     <result column="node_private_key" jdbcType="VARCHAR" property="nodePrivateKey" />
+    <result column="connect_peers" jdbcType="INTEGER" property="connectPeers" />
+    <result column="bzz_num" jdbcType="INTEGER" property="bzzNum" />
+    <result column="run_minute" jdbcType="INTEGER" property="runMinute" />
     <result column="node_ticket_num" jdbcType="INTEGER" property="nodeTicketNum" />
     <result column="node_detail" jdbcType="VARCHAR" property="nodeDetail" />
   </resultMap>
   <sql id="Base_Column_List">
-    id, node_ip, node_id, node_name, node_start_time, node_status, node_address, node_private_key, node_ticket_num,
-    node_detail
+    id, node_ip, node_id, node_name, node_start_time, node_status, node_address, node_private_key, connect_peers,
+    bzz_num, run_minute, node_ticket_num, node_detail
   </sql>
   <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="BaseResultMap">
     select 
@@ -141,6 +144,15 @@
       </if>
       <if test="nodePrivateKey != null">
         node_private_key = #{nodePrivateKey,jdbcType=VARCHAR},
+      </if>
+      <if test="connectPeers != null">
+        connect_peers = #{connectPeers,jdbcType=INTEGER},
+      </if>
+      <if test="bzzNum != null">
+        bzz_Num = #{bzzNum,jdbcType=VARCHAR},
+      </if>
+      <if test="runMinute != null">
+        run_minute = run_minute+5,
       </if>
       <if test="nodeTicketNum != null">
         node_ticket_num = #{nodeTicketNum,jdbcType=INTEGER},

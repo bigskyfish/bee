@@ -29,4 +29,6 @@ public interface ServerDao {
     int updateByPrimaryKeySelective(Server record);
 
     int updateByPrimaryKey(Server record);
+
+    int updateByIpSelective(Server server);
 }

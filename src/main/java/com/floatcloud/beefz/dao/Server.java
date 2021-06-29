@@ -60,6 +60,14 @@ public class Server implements Serializable {
      */
     private String detail;
 
+    private String cpuUsed;
+
+    private String memoryUsed;
+
+    private String allDisk;
+
+    private String diskUsed;
+
     /**
      * 服务器联通情况（检查网络）0：未连通（ping不同）1：已连通
      */

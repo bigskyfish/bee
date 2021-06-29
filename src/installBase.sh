@@ -1,6 +1,6 @@
 yum install -y wget
 installOrNot=${docker version}
-if [[ ! -n ${installOrNot} ]]
+if [[ -z ${installOrNot} ]]
 then
   # 1. 下载docker-ce的repo
   curl https://download.docker.com/linux/centos/docker-ce.repo -o /etc/yum.repos.d/docker-ce.repo
