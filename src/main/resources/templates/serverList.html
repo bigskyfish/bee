@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="https://www.thymeleaf.org/">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <title>服务器情况展示</title>
+</head>
+<body>
+<h4 align="center"> 服务器展示数据！</h4>
+
+<table border="1" class="table table-hover">
+    <thead>
+    <tr>
+        <th>服务器IP</th>
+        <th>负载</th>
+        <th>启动时间</th>
+        <th>CPU核数</th>
+        <th>带宽</th>
+        <th>cpu使用率</th>
+        <th>总内存</th>
+        <th>内存使用率</th>
+        <th>总磁盘空间</th>
+        <th>磁盘使用率</th>
+    </tr>
+    </thead>
+    <tr th:each="server:${servers}">
+        <td th:text="${server.ip}"></td>
+        <td th:text="${server.nodeNum}"></td>
+        <td th:text="${server.runTime}"></td>
+        <td th:text="${server.cpuNum}"></td>
+        <td th:text="${server.bandWidth}"></td>
+        <td th:text="${server.cpuUsed}"></td>
+        <td th:text="${server.memory}"></td>
+        <td>
+            <div class="progress">
+                <div class="progress-bar progress-bar-danger" role="progressbar"
+                     aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"
+                     th:width="${server.memoryUsed}">
+                    <span th:text="${server.memoryUsed}"></span>
+                </div>
+            </div>
+        </td>
+        <td th:text="${server.allDisk}"></td>
+        <td >
+            <div class="progress">
+                <div class="progress-bar progress-bar-danger" role="progressbar"
+                     aria-valuenow="60" aria-valuemin="0" aria-valuemax="100"
+                     th:width="${server.diskUsed}">
+                    <span th:text="${server.diskUsed}"></span>
+                </div>
+            </div>
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>

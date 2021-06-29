@@ -2,24 +2,35 @@
 <html lang="en" xmlns:th="https://www.thymeleaf.org/">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>节点情况展示</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://cdn.staticfile.org/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://cdn.staticfile.org/twitter-bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
 <body>
 <h4 align="center"> 节点地址展示数据！</h4>
 
-<table border="1">
-    <tr>
-        <th>服务器IP</th>
-        <th>节点名称</th>
-        <th>Bee地址</th>
-        <th>服务状况</th>
-        <th>出票数</th>
-    </tr>
+<table border="1" class="table table-hover">
+    <thead>
+        <tr>
+            <th>服务器IP</th>
+            <th>节点名称</th>
+            <th>Bee地址</th>
+            <th>服务状态</th>
+            <th>链接节点数</th>
+            <th>BZZ数</th>
+            <th>累计运行时间（单位分钟）</th>
+            <th>出票数</th>
+        </tr>
+    </thead>
     <tr th:each="server:${servers}">
         <td th:text="${server.nodeIp}"></td>
         <td th:text="${server.nodeName}"></td>
         <td th:text="${server.nodeAddress}"></td>
         <td th:text="${server.nodeStatus} eq 1 ? '正常':'异常'"></td>
+        <td th:text="${server.connectPeers}"></td>
+        <td th:text="${server.bzzNum}"></td>
+        <td th:text="${server.runMinute}"></td>
         <td th:text="${server.nodeTicketNum}"></td>
     </tr>
 </table>

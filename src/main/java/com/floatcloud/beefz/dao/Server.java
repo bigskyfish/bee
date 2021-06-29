@@ -3,6 +3,7 @@ package com.floatcloud.beefz.dao;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
 
 /**
  * server
@@ -34,6 +35,8 @@ public class Server implements Serializable {
     private Integer port;
 
     private String endpoint;
+
+    private Timestamp runTime;
 
     /**
      * 节点数

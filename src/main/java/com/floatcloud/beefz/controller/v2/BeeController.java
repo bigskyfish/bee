@@ -117,6 +117,18 @@ public class BeeController {
         return modelAndView;
     }
 
+    @GetMapping("/server")
+    public ModelAndView getServers(){
+        ModelAndView modelAndView = new ModelAndView();
+        List<Server> list = beeService.getServers(null);
+        for(Server server : list){
+
+        }
+        modelAndView.addObject("servers", list);
+        modelAndView.setViewName("serverList");
+        return modelAndView;
+    }
+
 
     @PostMapping("/address")
     public void getAddress(@RequestParam String ip,

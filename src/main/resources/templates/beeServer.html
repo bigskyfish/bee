@@ -2,24 +2,41 @@
 <html lang="en" xmlns:th="https://www.thymeleaf.org/">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <!-- 引入 layui.css -->
+    <link rel="stylesheet" href="//unpkg.com/layui@2.6.8/dist/css/layui.css" />
+    <!-- 引入 layui.js -->
+    <script src="//unpkg.com/layui@2.6.8/dist/layui.js" />
+    <title>节点情况展示</title>
 </head>
 <body>
 <h4 align="center"> 服务器展示数据！</h4>
 
-<table border="1">
-    <tr>
-        <th>服务器IP</th>
-        <th>节点名称</th>
-        <th>Bee地址</th>
-        <th>服务状态</th>
-        <th>私钥</th>
-    </tr>
+<table border="1" class="layui-table">
+    <colgroup>
+        <col width="150">
+        <col width="200">
+        <col>
+    </colgroup>
+    <thead>
+        <tr>
+            <th>服务器IP</th>
+            <th>节点名称</th>
+            <th>Bee地址</th>
+            <th>服务状态</th>
+            <th>链接节点数</th>
+            <th>BZZ数</th>
+            <th>累计运行时间（单位分钟）</th>
+            <th>私钥</th>
+        </tr>
+    </thead>
     <tr th:each="server:${servers}">
         <td th:text="${server.ip}"></td>
         <td th:text="${server.nodeName}"></td>
         <td th:text="${server.address}"></td>
         <td th:text="${server.status}"></td>
+        <td th:text="${server.connectPeers}"></td>
+        <td th:text="${server.bzzNum}"></td>
+        <td th:text="${server.runMinute}"></td>
         <td th:text="${server.privateKey}"></td>
     </tr>
 </table>

@@ -354,7 +354,7 @@ public class BeeService {
                        int id = Integer.parseInt(split[0]);
                        if(id != 0 && split.length > 1 && !split[1].isEmpty()) {
                            String address = split[1].endsWith("\"")?split[1].substring(1, split[1].length()-1):split[1];
-                           address = "0x" + address;
+                           address = !address.isEmpty() ? "0x" + address : address;
                            nodeDao.updateAddressByIpAndId(ip, id, address);
                        } else {
                            log.info("======错误地址信息：=====" + str);
