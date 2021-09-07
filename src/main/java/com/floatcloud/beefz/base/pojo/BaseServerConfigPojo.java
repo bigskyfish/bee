@@ -1,10 +1,9 @@
-package com.floatcloud.beefz.pojo;
+package com.floatcloud.beefz.base.pojo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.List;
+import lombok.ToString;
 
 /**
  * @author floatcloud
@@ -12,17 +11,12 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ServerConfigPojo {
+@ToString
+public class BaseServerConfigPojo {
 
     private String ip;
     private String user;
     private String password;
     private Integer port;
-    // bee 的 Swarm项目地址
-    private String endPoint;
-    // 节点数
-    private Integer nodeNum;
-    // 失败节点
-    private List<Integer> errorNode;
 
 }

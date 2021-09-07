@@ -1,1 +1,0 @@
-cat /dev/null /mnt/bee/beeSetup.log
