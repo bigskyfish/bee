@@ -18,7 +18,7 @@ public class BaseServerController {
 
     @GetMapping(value = "/v1/meson/install")
     public String installMeson(@RequestParam(defaultValue = "/root/meson/meson.csv") String filePath){
-
+        baseService.installMeson(filePath);
         return null;
     }
 }

@@ -25,7 +25,11 @@ public class BaseService {
      */
     private static final String INSTALL_FILE_PATH = "/root/meson/";
 
-    public boolean installMeson(String filePath){
+    /**
+     * 安装 Meson
+     * @param filePath 服务器文件路径
+     */
+    public void installMeson(String filePath){
         List<BaseServerConfigPojo> servers = TransferFileUtils.transferFileToServerConfig(filePath);
         List<String> fileNames = new ArrayList<>();
         fileNames.add("mesonInstall.sh");
@@ -37,7 +41,6 @@ public class BaseService {
                 sftpUtils.sendFileToRemote(INSTALL_FILE_PATH, INSTALL_FILE_PATH, fileNames);
             }
         }
-        return true;
     }
 
 }
