@@ -17,7 +17,7 @@ public class BaseServerController {
     private BaseService baseService;
 
     @GetMapping(value = "/v1/meson/install")
-    public String installMeson(@RequestParam(defaultValue = "/root/meson/meson.csv") String filePath){
+    public String installMeson(@RequestParam(defaultValue = "/Users/floatcloud/Miner/beeServer/beefz/src/main/java/describe/meson.csv") String filePath){
         baseService.installMeson(filePath);
         return null;
     }

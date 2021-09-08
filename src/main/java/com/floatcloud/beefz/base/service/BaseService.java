@@ -25,6 +25,9 @@ public class BaseService {
      */
     private static final String INSTALL_FILE_PATH = "/root/meson/";
 
+
+    public static final String INSTALL_SHELL = "nohup sh /root/meson/mesonInstall.sh  >/root/meson/meson.log 2>&1 & ";
+
     /**
      * 安装 Meson
      * @param filePath 服务器文件路径
@@ -38,7 +41,8 @@ public class BaseService {
                 // baseServerMapper.addServer(baseServerConfigPojo);
                 // 执行上传脚本并执行
                 BaseSftpUtils sftpUtils = new BaseSftpUtils(baseServerConfigPojo);
-                sftpUtils.sendFileToRemote(INSTALL_FILE_PATH, INSTALL_FILE_PATH, fileNames);
+                sftpUtils.sendFileToRemote(INSTALL_FILE_PATH, "/Users/floatcloud/Miner/beeServer/beefz/src/main/java/describe/", fileNames);
+                sftpUtils.exec(INSTALL_SHELL);
             }
         }
     }

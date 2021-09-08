@@ -35,6 +35,9 @@ public class BaseSftpUtils implements Closeable {
     private ChannelExec channelExec;
     private Session session;
 
+    public ChannelExec getChannelExec() {
+        return channelExec;
+    }
 
     public BaseSftpUtils(BaseServerConfigPojo serverConfigPojo){
         try {
@@ -54,6 +57,29 @@ public class BaseSftpUtils implements Closeable {
             log.error("init ip:{},userName:{},password:{} error:{}",serverConfigPojo.getIp(),
                     serverConfigPojo.getUser(), serverConfigPojo.getPassword(), e);
         }
+    }
+
+
+
+    /**
+     * 执行shell脚本
+     * @param shell shell 脚本
+     * @return 是否执行成功
+     */
+    public boolean exec(String shell){
+        boolean result = true;
+        if(connection()){
+            ChannelExec exec = getChannelExec();
+            log.info("执行脚本内容为：{}", shell);
+            exec.setCommand(shell);
+            try {
+                exec.connect();
+            } catch (JSchException e){
+                log.error("执行脚本失败,脚本内容：{} 错误原因：{}", shell, e );
+                result = false;
+            }
+        }
+        return result;
     }
 
 
