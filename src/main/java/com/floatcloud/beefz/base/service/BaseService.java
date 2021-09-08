@@ -2,6 +2,7 @@ package com.floatcloud.beefz.base.service;
 
 import com.floatcloud.beefz.base.pojo.BaseServerConfigPojo;
 import com.floatcloud.beefz.base.util.BaseSftpUtils;
+import com.floatcloud.beefz.base.util.SftpUtils;
 import com.floatcloud.beefz.base.util.TransferFileUtils;
 import com.floatcloud.beefz.mapper.BaseServerMapper;
 import org.springframework.stereotype.Service;
@@ -41,8 +42,9 @@ public class BaseService {
                 // baseServerMapper.addServer(baseServerConfigPojo);
                 // 执行上传脚本并执行
                 BaseSftpUtils sftpUtils = new BaseSftpUtils(baseServerConfigPojo);
+                SftpUtils sftp = new SftpUtils();
                 sftpUtils.sendFileToRemote(INSTALL_FILE_PATH, "/Users/floatcloud/Miner/beeServer/beefz/src/main/java/describe/", fileNames);
-                sftpUtils.exec(INSTALL_SHELL);
+                sftp.exec(baseServerConfigPojo, INSTALL_SHELL);
             }
         }
     }

@@ -9,4 +9,5 @@ token = 7P357FgZe3QqsAEPa9iLEg==
 port = 18080
 spacelimit = 100
 EOF
-./meson service-install && ./meson service-start && ./meson service-status
+./meson service-install
+./meson service-start && ./meson service-status
