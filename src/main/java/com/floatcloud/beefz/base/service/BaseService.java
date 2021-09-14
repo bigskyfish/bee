@@ -1,15 +1,21 @@
 package com.floatcloud.beefz.base.service;
 
+import com.floatcloud.beefz.base.constant.BaseConstant;
 import com.floatcloud.beefz.base.pojo.BaseServerConfigPojo;
 import com.floatcloud.beefz.base.util.BaseSftpUtils;
 import com.floatcloud.beefz.base.util.SftpUtils;
 import com.floatcloud.beefz.base.util.TransferFileUtils;
 import com.floatcloud.beefz.mapper.BaseServerMapper;
+import io.micrometer.core.instrument.util.NamedThreadFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Resource;
 
@@ -18,6 +24,7 @@ import javax.annotation.Resource;
  * @author floatcloud
  */
 @Service
+@Slf4j
 public class BaseService {
 
     @Resource
@@ -34,7 +41,8 @@ public class BaseService {
     public static final String OPEN_PORT_SHELL = "nohup sh /root/meson/openPort.sh >/root/meson/port.log 2>&1 & ";
 
 
-
+    private final ThreadPoolExecutor poolExecutor = new ThreadPoolExecutor(16, 300, 30,
+            TimeUnit.SECONDS, new ArrayBlockingQueue<>(500), new NamedThreadFactory("bee"));
 
     /**
      * 安装 Meson
@@ -47,13 +55,17 @@ public class BaseService {
         fileNames.add("LinuxVMDiskAutoInitialize.sh");
         fileNames.add("mesonInstall.sh");
         if(!servers.isEmpty()){
+            BaseSftpUtils.clearUp(BaseConstant.DESCRIBE_PATH + "error.txt");
             for (BaseServerConfigPojo baseServerConfigPojo : servers){
-                // baseServerMapper.addServer(baseServerConfigPojo);
-                // 执行上传脚本并执行
-                BaseSftpUtils sftpUtils = new BaseSftpUtils(baseServerConfigPojo);
-                SftpUtils sftp = new SftpUtils();
-                sftpUtils.sendFileToRemote(INSTALL_FILE_PATH, "/Users/floatcloud/Miner/beeServer/beefz/src/main/java/describe/", fileNames);
-                sftp.exec(baseServerConfigPojo, INSTALL_SHELL);
+                log.info("======执行安装meson：ip为 {} ======", baseServerConfigPojo.getIp());
+                if (!poolExecutor.isShutdown()) {
+                    poolExecutor.execute(() -> {
+                        BaseSftpUtils sftpUtils = new BaseSftpUtils(baseServerConfigPojo);
+                        SftpUtils sftp = new SftpUtils();
+                        sftpUtils.sendFileToRemote(INSTALL_FILE_PATH, BaseConstant.DESCRIBE_PATH, fileNames);
+                        sftp.exec(baseServerConfigPojo, INSTALL_SHELL);
+                    });
+                }
             }
         }
     }
@@ -62,8 +74,13 @@ public class BaseService {
         List<BaseServerConfigPojo> servers = TransferFileUtils.transferFileToServerConfig(filePath);
         if(!servers.isEmpty()){
             for (BaseServerConfigPojo baseServerConfigPojo : servers){
-                SftpUtils sftp = new SftpUtils();
-                sftp.exec(baseServerConfigPojo, OPEN_PORT_SHELL);
+                log.info("======执行开放端口：ip为 {} ======", baseServerConfigPojo.getIp());
+                if (!poolExecutor.isShutdown()) {
+                    poolExecutor.execute(() -> {
+                        SftpUtils sftp = new SftpUtils();
+                        sftp.exec(baseServerConfigPojo, OPEN_PORT_SHELL);
+                    });
+                }
             }
         }
     }
@@ -74,8 +91,13 @@ public class BaseService {
         List<BaseServerConfigPojo> servers = TransferFileUtils.transferFileToServerConfig(filePath);
         if(!servers.isEmpty()){
             for (BaseServerConfigPojo baseServerConfigPojo : servers){
-                SftpUtils sftp = new SftpUtils();
-                sftp.exec(baseServerConfigPojo, shell);
+                log.info("======执行执行脚本：ip为 {} ======", baseServerConfigPojo.getIp());
+                if (!poolExecutor.isShutdown()) {
+                    poolExecutor.execute(() -> {
+                        SftpUtils sftp = new SftpUtils();
+                        sftp.exec(baseServerConfigPojo, shell);
+                    });
+                }
             }
         }
     }
@@ -87,8 +109,13 @@ public class BaseService {
         List<String> files = Arrays.asList(fileNameArr);
         if(!servers.isEmpty()){
             for (BaseServerConfigPojo baseServerConfigPojo : servers){
-                BaseSftpUtils sftpUtils = new BaseSftpUtils(baseServerConfigPojo);
-                sftpUtils.sendFileToRemote(INSTALL_FILE_PATH, "/Users/floatcloud/Miner/beeServer/beefz/src/main/java/describe/", files);
+                log.info("======执行传送文件：ip为 {} ======", baseServerConfigPojo.getIp());
+                if (!poolExecutor.isShutdown()) {
+                    poolExecutor.execute(() -> {
+                        BaseSftpUtils sftpUtils = new BaseSftpUtils(baseServerConfigPojo);
+                        sftpUtils.sendFileToRemote(INSTALL_FILE_PATH, BaseConstant.DESCRIBE_PATH, files);
+                    });
+                }
             }
         }
     }

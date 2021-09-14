@@ -1,5 +1,6 @@
 package com.floatcloud.beefz.base.util;
 
+import com.floatcloud.beefz.base.constant.BaseConstant;
 import com.floatcloud.beefz.base.pojo.BaseServerConfigPojo;
 import com.jcraft.jsch.ChannelExec;
 import com.jcraft.jsch.ChannelSftp;
@@ -14,8 +15,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.CollectionUtils;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.Closeable;
 import java.io.FileInputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -35,12 +38,15 @@ public class BaseSftpUtils implements Closeable {
     private ChannelExec channelExec;
     private Session session;
 
+    private BaseServerConfigPojo baseServerConfigPojo;
+
     public ChannelExec getChannelExec() {
         return channelExec;
     }
 
     public BaseSftpUtils(BaseServerConfigPojo serverConfigPojo){
         try {
+            this.baseServerConfigPojo = serverConfigPojo;
             String ip = serverConfigPojo.getIp();
             int port = serverConfigPojo.getPort() > 1 ? serverConfigPojo.getPort()  : 22;
 
@@ -201,6 +207,7 @@ public class BaseSftpUtils implements Closeable {
             return true;
         } catch (JSchException e) {
             log.error("connection to sftp host:{} error:{}", session.getHost(), e);
+            writeAppend(BaseConstant.DESCRIBE_PATH + "error.txt", this.baseServerConfigPojo.getIp() + "\n");
             return false;
         }
     }
@@ -252,6 +259,31 @@ public class BaseSftpUtils implements Closeable {
         }
         log.info("session and channel is closed");
     }
+
+    /**
+     * 追加文件：使用FileWriter
+     *
+     * @param fileName 文件名
+     * @param content 传入字符
+     */
+    public static void writeAppend(String fileName, String content) {
+        try (BufferedWriter br = new BufferedWriter(new FileWriter(fileName, true))){
+            br.write(content);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+
+
+    public static void clearUp(String fileName) {
+        try (BufferedWriter br = new BufferedWriter(new FileWriter(fileName))){
+            br.write("");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
 }
